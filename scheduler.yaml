@@ -10,7 +10,7 @@ spec:
     metadata:
       labels: { app: energy-scheduler }
     spec:
-      serviceAccountName: system:kube-scheduler
+      # serviceAccountName: system:kube-scheduler
       containers:
       - name: kube-scheduler
         image: energy-scheduler:latest
