@@ -1,7 +1,7 @@
-package prometheus
+package metrics
 
 import (
-	benchmark "kube-scheduler/benchmark"
+    benchmark "kube-scheduler/benchmark"
 	"fmt"
 	"net/http"
 	"github.com/prometheus/client_golang/prometheus"

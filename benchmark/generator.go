@@ -1,4 +1,4 @@
-package workload
+package benchmark
 
 import (
 	"kube-scheduler/central-unit"

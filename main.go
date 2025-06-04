@@ -3,8 +3,7 @@ package main
 import (
 	benchmark "kube-scheduler/benchmark"
 	centralunit "kube-scheduler/central-unit"
-	workload "kube-scheduler/workload"
-    prometheus "kube-scheduler/prometheus"
+    metrics "kube-scheduler/metrics"
 )
 
 func main() {
@@ -23,7 +22,7 @@ func main() {
 	// }
 
     // Generate synthetic workloads
-    workloads := workload.GenerateSyntheticWorkloads(100)
+    workloads := benchmark.GenerateSyntheticWorkloads(100)
 
 	strategies := []centralunit.SchedulingStrategy{
 		centralunit.FCFS{},
@@ -39,7 +38,7 @@ func main() {
 		Workloads:  workloads,
 	}
 
-    prometheus.StartPrometheusServer()
+    metrics.StartPrometheusServer()
 
 	adapter.RunBenchmark()
 	adapter.ExportToCSV("benchmark_results.csv")
