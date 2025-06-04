@@ -31,7 +31,14 @@ func init() {
 	prometheus.MustRegister(energyGauge)
 }
 
-func (ba *benchmark.BenchmarkAdapter) UpdateMetrics() {
+// func (ba *benchmark.BenchmarkAdapter) UpdateMetrics() {
+//     for _, r := range ba.Results {
+//         decisionCounter.WithLabelValues(r.StrategyName, r.SelectedCluster).Inc()
+//         energyGauge.WithLabelValues(r.StrategyName, r.SelectedCluster).Set(r.EstimatedCost)
+//     }
+// }
+
+func UpdateMetrics(ba *benchmark.BenchmarkAdapter) {
     for _, r := range ba.Results {
         decisionCounter.WithLabelValues(r.StrategyName, r.SelectedCluster).Inc()
         energyGauge.WithLabelValues(r.StrategyName, r.SelectedCluster).Set(r.EstimatedCost)

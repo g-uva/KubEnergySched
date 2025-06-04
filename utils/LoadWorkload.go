@@ -1,10 +1,15 @@
-package util_loadworkload
+package utils
 
-package (
+import (
 	"encoding/csv"
 	"os"
 	"strconv"
 	"kube-scheduler/central-unit"
+    "crypto/rand"
+    "encoding/hex"
+    "path/filepath"
+    "time"
+    "fmt"
 )
 
 func LoadWorkloadsFromCSV(path string) ([]centralunit.Workload, error) {
@@ -25,4 +30,19 @@ func LoadWorkloadsFromCSV(path string) ([]centralunit.Workload, error) {
         })
     }
     return workloads, nil
+}
+
+func generateFilename() string {
+    id := make([]byte, 6)
+    if _, err := rand.Read(id); err != nil {
+        panic("Failed to generate random ID: " + err.Error())
+    }
+    timestamp := time.Now().Format("20060102-140405")
+    return fmt.Sprintf("results/%s_%s_benchmark.csv", hex.EncodeToString(id), timestamp)
+}
+
+func ensureResultsDirExit() {
+    if err := os.MkdirAll("results", os.ModePerm); err != nil {
+        panic("Failed to create results directory: " + err.Error())
+    }
 }
