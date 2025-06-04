@@ -4,38 +4,22 @@ KubeEnergyScheduler *aims* to be a platform-agnostic plugin that seamlessly inte
 - **Fully-managed**: the user (developer/researcher) does not have to worry about the underlying computation and resource allocation.
 - **Kubernetes-bases**: Kubernetes is the *de facto* cluster framework used at the core of many cloud infrastructures.
 
-For the moment this is a standalone scheduler binary that registers two toy plugins:
-– EnergyEfficiencyPlugin (linear power-efficiency model)
-– DVFSPlugin (favors mid-range CPU frequencies)
 
-### File view
+### Folder structure view
 ```txt
-energy-scheduler/
-├── go.mod
-├── go.sum
+kube-energy-scheduler/
 ├── main.go
-├── plugins/
-│   ├── energy.go
-│   └── dvfs.go
-└── Dockerfile
-```
-
-### Testbed view
-```txt
-┌────────────────────────────┐
-│    User Workload Request   │
-└────────────┬───────────────┘
-             ▼
-   ┌────────────────────┐
-   │  Central Unit (Go) │ ← Modular scheduler logic
-   └────┬────┬────┬─────┘
-        │    │    │
-        ▼    ▼    ▼
-   ┌──────┐ ┌──────┐ ┌──────┐
-   │ K8sA │ │ K8sB │ │ K8sC │  ← Simulated heterogeneous clusters (labels, plugins, etc.)
-   └──────┘ └──────┘ └──────┘
-
-          ▲
-          │ (Metrics)
-     Prometheus + Grafana
+├── scheduler/
+│   ├── cluster.go
+│   ├── strategy.go
+│   └── workload.go
+├── benchmark/
+│   ├── adapter.go
+│   └── generator.go
+├── metrics/
+│   └── prometheus.go
+├── data/
+│   └── workloads.csv
+├── go.mod
+...
 ```

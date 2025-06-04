@@ -1,6 +1,8 @@
-package prometheus_metrics
+package prometheus
 
 import (
+	benchmark "kube-scheduler/benchmark"
+	"fmt"
 	"net/http"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -29,3 +31,19 @@ func init() {
 	prometheus.MustRegister(energyGauge)
 }
 
+func (ba *benchmark.BenchmarkAdapter) UpdateMetrics() {
+    for _, r := range ba.Results {
+        decisionCounter.WithLabelValues(r.StrategyName, r.SelectedCluster).Inc()
+        energyGauge.WithLabelValues(r.StrategyName, r.SelectedCluster).Set(r.EstimatedCost)
+    }
+}
+
+func StartPrometheusServer() {
+    http.Handle("/metrics", promhttp.Handler())
+    go func() {
+        fmt.Println("[Prometheus] Starting metrics server on :2112")
+        if err := http.ListenAndServe(":2112", nil); err != nil {
+            fmt.Println("Error starting Prometheus server:", err)
+        }
+    }()
+}
