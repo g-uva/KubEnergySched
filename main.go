@@ -1,27 +1,39 @@
 package main
 
 import (
-    "fmt"
-    "runtime"
-
-    "github.com/you/energy-scheduler/plugins"
-    "k8s.io/apimachinery/pkg/runtime/schema"
-    schedcfg "k8s.io/kube-scheduler/config/v1"
-    "k8s.io/kube-scheduler/pkg/app"
-    "k8s.io/kube-scheduler/pkg/framework/plugins/registry"
-    "k8s.io/kubernetes/pkg/scheduler/framework"
+    "kube-scheduler/central-unit"
+    "kube-scheduler/benchmark"
 )
 
-func init() {
-    registry.Register(registry.Plugin{Name: "EnergyEfficiencyPlugin", New: plugins.NewEnergy})
-    registry.Register(registry.Plugin{Name: "DVFSPlugin", New: plugins.NewDVFS})
-}
-
 func main() {
-    fmt.Printf("Starting Energy-aware Scheduler (%s/%s)\n", runtime.GOOS, runtime.GOARCH)
-    opts := app.Options{
-        ComponentConfig: &schedcfg.KubeSchedulerConfiguration{},
-        ConfigFile:      "/etc/kube-scheduler/config.yaml",
+    clusters := []centralunit.Cluster{
+        centralunit.SimulatedCluster{"eu-central", 16, 1.0, 500, 0, "EU"},
+        centralunit.SimulatedCluster{"us-west", 32, 0.8, 350, 0, "US"},
+        centralunit.SimulatedCluster{"low-power-node", 8, 0.5, 50, 0, "NL"},
     }
-    app.Run(opts)
+
+    workloads := []centralunit.Workload{
+        {"job-1", 10, 1.0},
+        {"job-2", 20, 0.5},
+        {"job-3", 6, 0.9},
+        {"job-4", 32, 0.4},
+        {"job-5", 4, 1.0},
+    }
+
+    strategies := []centralunit.SchedulingStrategy{
+        centralunit.FCFS{},
+        &centralunit.RoundRobin{},
+        centralunit.MinMin{},
+        centralunit.MaxMin{},
+        centralunit.EnergyAwareStrategy{},
+    }
+
+    adapter := benchmark.BenchmarkAdapter{
+        Clusters:   clusters,
+        Strategies: strategies,
+        Workloads:  workloads,
+    }
+
+    adapter.RunBenchmark()
+    adapter.ExportToCSV("benchmark_results.csv")
 }
