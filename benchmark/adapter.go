@@ -7,6 +7,8 @@ import (
     "time"
     "reflect"
     "kube-scheduler/central-unit"
+    "encoding/hex"
+    "crypto/rand"
 )
 
 // BenchmarkRecord holds detailed benchmark logs
@@ -53,7 +55,15 @@ func (ba *BenchmarkAdapter) RunBenchmark() {
     }
 }
 
-func (ba *BenchmarkAdapter) ExportToCSV(filename string) error {
+func (ba *BenchmarkAdapter) ExportToCSV() error {
+    
+    // Ensuring that the results directory exists :)
+    if err := os.MkdirAll("results", os.ModePerm); err != nil {
+        panic("Failed to create results directory: " + err.Error())
+    }
+
+    filename := generateFilename()
+
     file, err := os.Create(filename)
     if err != nil {
         return err
@@ -81,4 +91,13 @@ func (ba *BenchmarkAdapter) ExportToCSV(filename string) error {
     }
     fmt.Printf("[Benchmark] Exported to CSV: %s\n", filename)
     return nil
+}
+
+func generateFilename() string {
+    id := make([]byte, 6)
+    if _, err := rand.Read(id); err != nil {
+        panic("Failed to generate random ID: " + err.Error())
+    }
+    timestamp := time.Now().Format("20060102-140405")
+    return fmt.Sprintf("results/%s_%s_benchmark.csv", hex.EncodeToString(id), timestamp)
 }

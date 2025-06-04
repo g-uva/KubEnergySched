@@ -3,7 +3,6 @@ package main
 import (
 	benchmark "kube-scheduler/benchmark"
 	centralunit "kube-scheduler/central-unit"
-    metrics "kube-scheduler/metrics"
 )
 
 func main() {
@@ -38,8 +37,8 @@ func main() {
 		Workloads:  workloads,
 	}
 
-    metrics.StartPrometheusServer()
-
 	adapter.RunBenchmark()
-	adapter.ExportToCSV("benchmark_results.csv")
+	adapter.ExportToCSV()
+
+//     metrics.StartPrometheusServer()
 }
