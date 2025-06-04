@@ -1,0 +1,501 @@
+Timestamp,WorkloadID,Strategy,Cluster,EnergyCost,CarbonIntensity,Reasoning
+2025-06-04T20:34:04+02:00,job-0,FCFS,us-west,16.00,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-1,FCFS,us-west,23.20,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-2,FCFS,eu-central,16.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-3,FCFS,us-west,21.60,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-4,FCFS,eu-central,11.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-5,FCFS,eu-central,11.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-6,FCFS,eu-central,1.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-7,FCFS,us-west,19.20,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-8,FCFS,eu-central,15.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-9,FCFS,us-west,20.00,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-10,FCFS,us-west,14.40,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-11,FCFS,eu-central,2.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-12,FCFS,eu-central,3.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-13,FCFS,us-west,20.00,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-14,FCFS,eu-central,13.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-15,FCFS,us-west,24.80,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-16,FCFS,eu-central,1.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-17,FCFS,eu-central,13.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-18,FCFS,eu-central,9.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-19,FCFS,us-west,15.20,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-20,FCFS,us-west,22.40,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-21,FCFS,eu-central,5.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-22,FCFS,us-west,13.60,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-23,FCFS,us-west,25.60,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-24,FCFS,us-west,14.40,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-25,FCFS,us-west,24.00,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-26,FCFS,eu-central,11.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-27,FCFS,us-west,21.60,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-28,FCFS,us-west,20.00,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-29,FCFS,us-west,13.60,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-30,FCFS,eu-central,15.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-31,FCFS,eu-central,12.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-32,FCFS,us-west,20.80,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-33,FCFS,us-west,20.00,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-34,FCFS,us-west,17.60,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-35,FCFS,eu-central,9.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-36,FCFS,eu-central,5.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-37,FCFS,us-west,15.20,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-38,FCFS,us-west,17.60,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-39,FCFS,us-west,24.00,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-40,FCFS,eu-central,15.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-41,FCFS,eu-central,10.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-42,FCFS,eu-central,6.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-43,FCFS,us-west,23.20,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-44,FCFS,us-west,13.60,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-45,FCFS,us-west,16.80,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-46,FCFS,us-west,15.20,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-47,FCFS,us-west,24.00,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-48,FCFS,us-west,18.40,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-49,FCFS,us-west,15.20,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-50,FCFS,us-west,18.40,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-51,FCFS,eu-central,11.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-52,FCFS,eu-central,10.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-53,FCFS,eu-central,9.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-54,FCFS,eu-central,4.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-55,FCFS,us-west,22.40,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-56,FCFS,eu-central,2.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-57,FCFS,eu-central,16.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-58,FCFS,us-west,25.60,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-59,FCFS,eu-central,4.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-60,FCFS,eu-central,15.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-61,FCFS,eu-central,5.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-62,FCFS,us-west,18.40,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-63,FCFS,eu-central,1.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-64,FCFS,eu-central,12.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-65,FCFS,us-west,14.40,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-66,FCFS,us-west,15.20,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-67,FCFS,eu-central,6.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-68,FCFS,eu-central,4.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-69,FCFS,eu-central,13.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-70,FCFS,eu-central,6.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-71,FCFS,us-west,23.20,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-72,FCFS,eu-central,6.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-73,FCFS,us-west,22.40,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-74,FCFS,eu-central,13.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-75,FCFS,us-west,20.00,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-76,FCFS,eu-central,7.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-77,FCFS,us-west,25.60,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-78,FCFS,us-west,16.80,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-79,FCFS,eu-central,5.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-80,FCFS,us-west,24.80,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-81,FCFS,us-west,16.80,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-82,FCFS,eu-central,5.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-83,FCFS,us-west,16.80,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-84,FCFS,us-west,13.60,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-85,FCFS,eu-central,3.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-86,FCFS,eu-central,2.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-87,FCFS,eu-central,5.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-88,FCFS,eu-central,11.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-89,FCFS,us-west,24.00,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-90,FCFS,eu-central,9.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-91,FCFS,us-west,25.60,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-92,FCFS,eu-central,4.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-93,FCFS,eu-central,16.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-94,FCFS,eu-central,13.00,500.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-95,FCFS,us-west,20.80,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-96,FCFS,us-west,18.40,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-97,FCFS,us-west,23.20,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-98,FCFS,us-west,19.20,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-99,FCFS,us-west,13.60,350.00,Selected first available cluster
+2025-06-04T20:34:04+02:00,job-0,,us-west,16.00,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-1,,us-west,23.20,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-2,,eu-central,16.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-3,,us-west,21.60,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-4,,us-west,8.80,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-5,,eu-central,11.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-6,,eu-central,1.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-7,,us-west,19.20,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-8,,eu-central,15.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-9,,us-west,20.00,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-10,,us-west,14.40,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-11,,low-power-node,1.00,50.00,Selected low-power-node using Round Robin
+2025-06-04T20:34:04+02:00,job-12,,eu-central,3.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-13,,us-west,20.00,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-14,,eu-central,13.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-15,,us-west,24.80,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-16,,us-west,0.80,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-17,,eu-central,13.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-18,,eu-central,9.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-19,,us-west,15.20,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-20,,us-west,22.40,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-21,,eu-central,5.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-22,,us-west,13.60,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-23,,us-west,25.60,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-24,,us-west,14.40,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-25,,us-west,24.00,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-26,,eu-central,11.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-27,,us-west,21.60,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-28,,us-west,20.00,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-29,,us-west,13.60,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-30,,eu-central,15.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-31,,us-west,9.60,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-32,,us-west,20.80,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-33,,us-west,20.00,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-34,,us-west,17.60,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-35,,eu-central,9.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-36,,eu-central,5.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-37,,us-west,15.20,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-38,,us-west,17.60,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-39,,us-west,24.00,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-40,,us-west,12.00,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-41,,eu-central,10.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-42,,eu-central,6.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-43,,us-west,23.20,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-44,,us-west,13.60,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-45,,us-west,16.80,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-46,,us-west,15.20,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-47,,us-west,24.00,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-48,,us-west,18.40,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-49,,us-west,15.20,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-50,,us-west,18.40,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-51,,eu-central,11.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-52,,us-west,8.00,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-53,,eu-central,9.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-54,,eu-central,4.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-55,,us-west,22.40,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-56,,low-power-node,1.00,50.00,Selected low-power-node using Round Robin
+2025-06-04T20:34:04+02:00,job-57,,eu-central,16.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-58,,us-west,25.60,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-59,,low-power-node,2.00,50.00,Selected low-power-node using Round Robin
+2025-06-04T20:34:04+02:00,job-60,,eu-central,15.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-61,,us-west,4.00,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-62,,us-west,18.40,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-63,,eu-central,1.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-64,,us-west,9.60,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-65,,us-west,14.40,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-66,,us-west,15.20,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-67,,us-west,4.80,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-68,,low-power-node,2.00,50.00,Selected low-power-node using Round Robin
+2025-06-04T20:34:04+02:00,job-69,,eu-central,13.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-70,,us-west,4.80,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-71,,us-west,23.20,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-72,,eu-central,6.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-73,,us-west,22.40,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-74,,eu-central,13.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-75,,us-west,20.00,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-76,,us-west,5.60,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-77,,us-west,25.60,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-78,,us-west,16.80,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-79,,us-west,4.00,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-80,,us-west,24.80,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-81,,us-west,16.80,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-82,,us-west,4.00,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-83,,us-west,16.80,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-84,,us-west,13.60,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-85,,us-west,2.40,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-86,,low-power-node,1.00,50.00,Selected low-power-node using Round Robin
+2025-06-04T20:34:04+02:00,job-87,,eu-central,5.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-88,,us-west,8.80,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-89,,us-west,24.00,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-90,,eu-central,9.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-91,,us-west,25.60,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-92,,low-power-node,2.00,50.00,Selected low-power-node using Round Robin
+2025-06-04T20:34:04+02:00,job-93,,eu-central,16.00,500.00,Selected eu-central using Round Robin
+2025-06-04T20:34:04+02:00,job-94,,us-west,10.40,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-95,,us-west,20.80,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-96,,us-west,18.40,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-97,,us-west,23.20,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-98,,us-west,19.20,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-99,,us-west,13.60,350.00,Selected us-west using Round Robin
+2025-06-04T20:34:04+02:00,job-0,MinMin,us-west,16.00,350.00,Min-Min selected us-west with cost 16.00
+2025-06-04T20:34:04+02:00,job-1,MinMin,us-west,23.20,350.00,Min-Min selected us-west with cost 23.20
+2025-06-04T20:34:04+02:00,job-2,MinMin,us-west,12.80,350.00,Min-Min selected us-west with cost 12.80
+2025-06-04T20:34:04+02:00,job-3,MinMin,us-west,21.60,350.00,Min-Min selected us-west with cost 21.60
+2025-06-04T20:34:04+02:00,job-4,MinMin,us-west,8.80,350.00,Min-Min selected us-west with cost 8.80
+2025-06-04T20:34:04+02:00,job-5,MinMin,us-west,8.80,350.00,Min-Min selected us-west with cost 8.80
+2025-06-04T20:34:04+02:00,job-6,MinMin,low-power-node,0.50,50.00,Min-Min selected low-power-node with cost 0.50
+2025-06-04T20:34:04+02:00,job-7,MinMin,us-west,19.20,350.00,Min-Min selected us-west with cost 19.20
+2025-06-04T20:34:04+02:00,job-8,MinMin,us-west,12.00,350.00,Min-Min selected us-west with cost 12.00
+2025-06-04T20:34:04+02:00,job-9,MinMin,us-west,20.00,350.00,Min-Min selected us-west with cost 20.00
+2025-06-04T20:34:04+02:00,job-10,MinMin,us-west,14.40,350.00,Min-Min selected us-west with cost 14.40
+2025-06-04T20:34:04+02:00,job-11,MinMin,low-power-node,1.00,50.00,Min-Min selected low-power-node with cost 1.00
+2025-06-04T20:34:04+02:00,job-12,MinMin,low-power-node,1.50,50.00,Min-Min selected low-power-node with cost 1.50
+2025-06-04T20:34:04+02:00,job-13,MinMin,us-west,20.00,350.00,Min-Min selected us-west with cost 20.00
+2025-06-04T20:34:04+02:00,job-14,MinMin,us-west,10.40,350.00,Min-Min selected us-west with cost 10.40
+2025-06-04T20:34:04+02:00,job-15,MinMin,us-west,24.80,350.00,Min-Min selected us-west with cost 24.80
+2025-06-04T20:34:04+02:00,job-16,MinMin,low-power-node,0.50,50.00,Min-Min selected low-power-node with cost 0.50
+2025-06-04T20:34:04+02:00,job-17,MinMin,us-west,10.40,350.00,Min-Min selected us-west with cost 10.40
+2025-06-04T20:34:04+02:00,job-18,MinMin,us-west,7.20,350.00,Min-Min selected us-west with cost 7.20
+2025-06-04T20:34:04+02:00,job-19,MinMin,us-west,15.20,350.00,Min-Min selected us-west with cost 15.20
+2025-06-04T20:34:04+02:00,job-20,MinMin,us-west,22.40,350.00,Min-Min selected us-west with cost 22.40
+2025-06-04T20:34:04+02:00,job-21,MinMin,low-power-node,2.50,50.00,Min-Min selected low-power-node with cost 2.50
+2025-06-04T20:34:04+02:00,job-22,MinMin,us-west,13.60,350.00,Min-Min selected us-west with cost 13.60
+2025-06-04T20:34:04+02:00,job-23,MinMin,us-west,25.60,350.00,Min-Min selected us-west with cost 25.60
+2025-06-04T20:34:04+02:00,job-24,MinMin,us-west,14.40,350.00,Min-Min selected us-west with cost 14.40
+2025-06-04T20:34:04+02:00,job-25,MinMin,us-west,24.00,350.00,Min-Min selected us-west with cost 24.00
+2025-06-04T20:34:04+02:00,job-26,MinMin,us-west,8.80,350.00,Min-Min selected us-west with cost 8.80
+2025-06-04T20:34:04+02:00,job-27,MinMin,us-west,21.60,350.00,Min-Min selected us-west with cost 21.60
+2025-06-04T20:34:04+02:00,job-28,MinMin,us-west,20.00,350.00,Min-Min selected us-west with cost 20.00
+2025-06-04T20:34:04+02:00,job-29,MinMin,us-west,13.60,350.00,Min-Min selected us-west with cost 13.60
+2025-06-04T20:34:04+02:00,job-30,MinMin,us-west,12.00,350.00,Min-Min selected us-west with cost 12.00
+2025-06-04T20:34:04+02:00,job-31,MinMin,us-west,9.60,350.00,Min-Min selected us-west with cost 9.60
+2025-06-04T20:34:04+02:00,job-32,MinMin,us-west,20.80,350.00,Min-Min selected us-west with cost 20.80
+2025-06-04T20:34:04+02:00,job-33,MinMin,us-west,20.00,350.00,Min-Min selected us-west with cost 20.00
+2025-06-04T20:34:04+02:00,job-34,MinMin,us-west,17.60,350.00,Min-Min selected us-west with cost 17.60
+2025-06-04T20:34:04+02:00,job-35,MinMin,us-west,7.20,350.00,Min-Min selected us-west with cost 7.20
+2025-06-04T20:34:04+02:00,job-36,MinMin,low-power-node,2.50,50.00,Min-Min selected low-power-node with cost 2.50
+2025-06-04T20:34:04+02:00,job-37,MinMin,us-west,15.20,350.00,Min-Min selected us-west with cost 15.20
+2025-06-04T20:34:04+02:00,job-38,MinMin,us-west,17.60,350.00,Min-Min selected us-west with cost 17.60
+2025-06-04T20:34:04+02:00,job-39,MinMin,us-west,24.00,350.00,Min-Min selected us-west with cost 24.00
+2025-06-04T20:34:04+02:00,job-40,MinMin,us-west,12.00,350.00,Min-Min selected us-west with cost 12.00
+2025-06-04T20:34:04+02:00,job-41,MinMin,us-west,8.00,350.00,Min-Min selected us-west with cost 8.00
+2025-06-04T20:34:04+02:00,job-42,MinMin,low-power-node,3.00,50.00,Min-Min selected low-power-node with cost 3.00
+2025-06-04T20:34:04+02:00,job-43,MinMin,us-west,23.20,350.00,Min-Min selected us-west with cost 23.20
+2025-06-04T20:34:04+02:00,job-44,MinMin,us-west,13.60,350.00,Min-Min selected us-west with cost 13.60
+2025-06-04T20:34:04+02:00,job-45,MinMin,us-west,16.80,350.00,Min-Min selected us-west with cost 16.80
+2025-06-04T20:34:04+02:00,job-46,MinMin,us-west,15.20,350.00,Min-Min selected us-west with cost 15.20
+2025-06-04T20:34:04+02:00,job-47,MinMin,us-west,24.00,350.00,Min-Min selected us-west with cost 24.00
+2025-06-04T20:34:04+02:00,job-48,MinMin,us-west,18.40,350.00,Min-Min selected us-west with cost 18.40
+2025-06-04T20:34:04+02:00,job-49,MinMin,us-west,15.20,350.00,Min-Min selected us-west with cost 15.20
+2025-06-04T20:34:04+02:00,job-50,MinMin,us-west,18.40,350.00,Min-Min selected us-west with cost 18.40
+2025-06-04T20:34:04+02:00,job-51,MinMin,us-west,8.80,350.00,Min-Min selected us-west with cost 8.80
+2025-06-04T20:34:04+02:00,job-52,MinMin,us-west,8.00,350.00,Min-Min selected us-west with cost 8.00
+2025-06-04T20:34:04+02:00,job-53,MinMin,us-west,7.20,350.00,Min-Min selected us-west with cost 7.20
+2025-06-04T20:34:04+02:00,job-54,MinMin,low-power-node,2.00,50.00,Min-Min selected low-power-node with cost 2.00
+2025-06-04T20:34:04+02:00,job-55,MinMin,us-west,22.40,350.00,Min-Min selected us-west with cost 22.40
+2025-06-04T20:34:04+02:00,job-56,MinMin,low-power-node,1.00,50.00,Min-Min selected low-power-node with cost 1.00
+2025-06-04T20:34:04+02:00,job-57,MinMin,us-west,12.80,350.00,Min-Min selected us-west with cost 12.80
+2025-06-04T20:34:04+02:00,job-58,MinMin,us-west,25.60,350.00,Min-Min selected us-west with cost 25.60
+2025-06-04T20:34:04+02:00,job-59,MinMin,low-power-node,2.00,50.00,Min-Min selected low-power-node with cost 2.00
+2025-06-04T20:34:04+02:00,job-60,MinMin,us-west,12.00,350.00,Min-Min selected us-west with cost 12.00
+2025-06-04T20:34:04+02:00,job-61,MinMin,low-power-node,2.50,50.00,Min-Min selected low-power-node with cost 2.50
+2025-06-04T20:34:04+02:00,job-62,MinMin,us-west,18.40,350.00,Min-Min selected us-west with cost 18.40
+2025-06-04T20:34:04+02:00,job-63,MinMin,low-power-node,0.50,50.00,Min-Min selected low-power-node with cost 0.50
+2025-06-04T20:34:04+02:00,job-64,MinMin,us-west,9.60,350.00,Min-Min selected us-west with cost 9.60
+2025-06-04T20:34:04+02:00,job-65,MinMin,us-west,14.40,350.00,Min-Min selected us-west with cost 14.40
+2025-06-04T20:34:04+02:00,job-66,MinMin,us-west,15.20,350.00,Min-Min selected us-west with cost 15.20
+2025-06-04T20:34:04+02:00,job-67,MinMin,low-power-node,3.00,50.00,Min-Min selected low-power-node with cost 3.00
+2025-06-04T20:34:04+02:00,job-68,MinMin,low-power-node,2.00,50.00,Min-Min selected low-power-node with cost 2.00
+2025-06-04T20:34:04+02:00,job-69,MinMin,us-west,10.40,350.00,Min-Min selected us-west with cost 10.40
+2025-06-04T20:34:04+02:00,job-70,MinMin,low-power-node,3.00,50.00,Min-Min selected low-power-node with cost 3.00
+2025-06-04T20:34:04+02:00,job-71,MinMin,us-west,23.20,350.00,Min-Min selected us-west with cost 23.20
+2025-06-04T20:34:04+02:00,job-72,MinMin,low-power-node,3.00,50.00,Min-Min selected low-power-node with cost 3.00
+2025-06-04T20:34:04+02:00,job-73,MinMin,us-west,22.40,350.00,Min-Min selected us-west with cost 22.40
+2025-06-04T20:34:04+02:00,job-74,MinMin,us-west,10.40,350.00,Min-Min selected us-west with cost 10.40
+2025-06-04T20:34:04+02:00,job-75,MinMin,us-west,20.00,350.00,Min-Min selected us-west with cost 20.00
+2025-06-04T20:34:04+02:00,job-76,MinMin,low-power-node,3.50,50.00,Min-Min selected low-power-node with cost 3.50
+2025-06-04T20:34:04+02:00,job-77,MinMin,us-west,25.60,350.00,Min-Min selected us-west with cost 25.60
+2025-06-04T20:34:04+02:00,job-78,MinMin,us-west,16.80,350.00,Min-Min selected us-west with cost 16.80
+2025-06-04T20:34:04+02:00,job-79,MinMin,low-power-node,2.50,50.00,Min-Min selected low-power-node with cost 2.50
+2025-06-04T20:34:04+02:00,job-80,MinMin,us-west,24.80,350.00,Min-Min selected us-west with cost 24.80
+2025-06-04T20:34:04+02:00,job-81,MinMin,us-west,16.80,350.00,Min-Min selected us-west with cost 16.80
+2025-06-04T20:34:04+02:00,job-82,MinMin,low-power-node,2.50,50.00,Min-Min selected low-power-node with cost 2.50
+2025-06-04T20:34:04+02:00,job-83,MinMin,us-west,16.80,350.00,Min-Min selected us-west with cost 16.80
+2025-06-04T20:34:04+02:00,job-84,MinMin,us-west,13.60,350.00,Min-Min selected us-west with cost 13.60
+2025-06-04T20:34:04+02:00,job-85,MinMin,low-power-node,1.50,50.00,Min-Min selected low-power-node with cost 1.50
+2025-06-04T20:34:04+02:00,job-86,MinMin,low-power-node,1.00,50.00,Min-Min selected low-power-node with cost 1.00
+2025-06-04T20:34:04+02:00,job-87,MinMin,low-power-node,2.50,50.00,Min-Min selected low-power-node with cost 2.50
+2025-06-04T20:34:04+02:00,job-88,MinMin,us-west,8.80,350.00,Min-Min selected us-west with cost 8.80
+2025-06-04T20:34:04+02:00,job-89,MinMin,us-west,24.00,350.00,Min-Min selected us-west with cost 24.00
+2025-06-04T20:34:04+02:00,job-90,MinMin,us-west,7.20,350.00,Min-Min selected us-west with cost 7.20
+2025-06-04T20:34:04+02:00,job-91,MinMin,us-west,25.60,350.00,Min-Min selected us-west with cost 25.60
+2025-06-04T20:34:04+02:00,job-92,MinMin,low-power-node,2.00,50.00,Min-Min selected low-power-node with cost 2.00
+2025-06-04T20:34:04+02:00,job-93,MinMin,us-west,12.80,350.00,Min-Min selected us-west with cost 12.80
+2025-06-04T20:34:04+02:00,job-94,MinMin,us-west,10.40,350.00,Min-Min selected us-west with cost 10.40
+2025-06-04T20:34:04+02:00,job-95,MinMin,us-west,20.80,350.00,Min-Min selected us-west with cost 20.80
+2025-06-04T20:34:04+02:00,job-96,MinMin,us-west,18.40,350.00,Min-Min selected us-west with cost 18.40
+2025-06-04T20:34:04+02:00,job-97,MinMin,us-west,23.20,350.00,Min-Min selected us-west with cost 23.20
+2025-06-04T20:34:04+02:00,job-98,MinMin,us-west,19.20,350.00,Min-Min selected us-west with cost 19.20
+2025-06-04T20:34:04+02:00,job-99,MinMin,us-west,13.60,350.00,Min-Min selected us-west with cost 13.60
+2025-06-04T20:34:04+02:00,job-0,MaxMin,us-west,16.00,350.00,Max-Min selected us-west with cost 16.00
+2025-06-04T20:34:04+02:00,job-1,MaxMin,us-west,23.20,350.00,Max-Min selected us-west with cost 23.20
+2025-06-04T20:34:04+02:00,job-2,MaxMin,eu-central,16.00,500.00,Max-Min selected eu-central with cost 16.00
+2025-06-04T20:34:04+02:00,job-3,MaxMin,us-west,21.60,350.00,Max-Min selected us-west with cost 21.60
+2025-06-04T20:34:04+02:00,job-4,MaxMin,eu-central,11.00,500.00,Max-Min selected eu-central with cost 11.00
+2025-06-04T20:34:04+02:00,job-5,MaxMin,eu-central,11.00,500.00,Max-Min selected eu-central with cost 11.00
+2025-06-04T20:34:04+02:00,job-6,MaxMin,eu-central,1.00,500.00,Max-Min selected eu-central with cost 1.00
+2025-06-04T20:34:04+02:00,job-7,MaxMin,us-west,19.20,350.00,Max-Min selected us-west with cost 19.20
+2025-06-04T20:34:04+02:00,job-8,MaxMin,eu-central,15.00,500.00,Max-Min selected eu-central with cost 15.00
+2025-06-04T20:34:04+02:00,job-9,MaxMin,us-west,20.00,350.00,Max-Min selected us-west with cost 20.00
+2025-06-04T20:34:04+02:00,job-10,MaxMin,us-west,14.40,350.00,Max-Min selected us-west with cost 14.40
+2025-06-04T20:34:04+02:00,job-11,MaxMin,eu-central,2.00,500.00,Max-Min selected eu-central with cost 2.00
+2025-06-04T20:34:04+02:00,job-12,MaxMin,eu-central,3.00,500.00,Max-Min selected eu-central with cost 3.00
+2025-06-04T20:34:04+02:00,job-13,MaxMin,us-west,20.00,350.00,Max-Min selected us-west with cost 20.00
+2025-06-04T20:34:04+02:00,job-14,MaxMin,eu-central,13.00,500.00,Max-Min selected eu-central with cost 13.00
+2025-06-04T20:34:04+02:00,job-15,MaxMin,us-west,24.80,350.00,Max-Min selected us-west with cost 24.80
+2025-06-04T20:34:04+02:00,job-16,MaxMin,eu-central,1.00,500.00,Max-Min selected eu-central with cost 1.00
+2025-06-04T20:34:04+02:00,job-17,MaxMin,eu-central,13.00,500.00,Max-Min selected eu-central with cost 13.00
+2025-06-04T20:34:04+02:00,job-18,MaxMin,eu-central,9.00,500.00,Max-Min selected eu-central with cost 9.00
+2025-06-04T20:34:04+02:00,job-19,MaxMin,us-west,15.20,350.00,Max-Min selected us-west with cost 15.20
+2025-06-04T20:34:04+02:00,job-20,MaxMin,us-west,22.40,350.00,Max-Min selected us-west with cost 22.40
+2025-06-04T20:34:04+02:00,job-21,MaxMin,eu-central,5.00,500.00,Max-Min selected eu-central with cost 5.00
+2025-06-04T20:34:04+02:00,job-22,MaxMin,us-west,13.60,350.00,Max-Min selected us-west with cost 13.60
+2025-06-04T20:34:04+02:00,job-23,MaxMin,us-west,25.60,350.00,Max-Min selected us-west with cost 25.60
+2025-06-04T20:34:04+02:00,job-24,MaxMin,us-west,14.40,350.00,Max-Min selected us-west with cost 14.40
+2025-06-04T20:34:04+02:00,job-25,MaxMin,us-west,24.00,350.00,Max-Min selected us-west with cost 24.00
+2025-06-04T20:34:04+02:00,job-26,MaxMin,eu-central,11.00,500.00,Max-Min selected eu-central with cost 11.00
+2025-06-04T20:34:04+02:00,job-27,MaxMin,us-west,21.60,350.00,Max-Min selected us-west with cost 21.60
+2025-06-04T20:34:04+02:00,job-28,MaxMin,us-west,20.00,350.00,Max-Min selected us-west with cost 20.00
+2025-06-04T20:34:04+02:00,job-29,MaxMin,us-west,13.60,350.00,Max-Min selected us-west with cost 13.60
+2025-06-04T20:34:04+02:00,job-30,MaxMin,eu-central,15.00,500.00,Max-Min selected eu-central with cost 15.00
+2025-06-04T20:34:04+02:00,job-31,MaxMin,eu-central,12.00,500.00,Max-Min selected eu-central with cost 12.00
+2025-06-04T20:34:04+02:00,job-32,MaxMin,us-west,20.80,350.00,Max-Min selected us-west with cost 20.80
+2025-06-04T20:34:04+02:00,job-33,MaxMin,us-west,20.00,350.00,Max-Min selected us-west with cost 20.00
+2025-06-04T20:34:04+02:00,job-34,MaxMin,us-west,17.60,350.00,Max-Min selected us-west with cost 17.60
+2025-06-04T20:34:04+02:00,job-35,MaxMin,eu-central,9.00,500.00,Max-Min selected eu-central with cost 9.00
+2025-06-04T20:34:04+02:00,job-36,MaxMin,eu-central,5.00,500.00,Max-Min selected eu-central with cost 5.00
+2025-06-04T20:34:04+02:00,job-37,MaxMin,us-west,15.20,350.00,Max-Min selected us-west with cost 15.20
+2025-06-04T20:34:04+02:00,job-38,MaxMin,us-west,17.60,350.00,Max-Min selected us-west with cost 17.60
+2025-06-04T20:34:04+02:00,job-39,MaxMin,us-west,24.00,350.00,Max-Min selected us-west with cost 24.00
+2025-06-04T20:34:04+02:00,job-40,MaxMin,eu-central,15.00,500.00,Max-Min selected eu-central with cost 15.00
+2025-06-04T20:34:04+02:00,job-41,MaxMin,eu-central,10.00,500.00,Max-Min selected eu-central with cost 10.00
+2025-06-04T20:34:04+02:00,job-42,MaxMin,eu-central,6.00,500.00,Max-Min selected eu-central with cost 6.00
+2025-06-04T20:34:04+02:00,job-43,MaxMin,us-west,23.20,350.00,Max-Min selected us-west with cost 23.20
+2025-06-04T20:34:04+02:00,job-44,MaxMin,us-west,13.60,350.00,Max-Min selected us-west with cost 13.60
+2025-06-04T20:34:04+02:00,job-45,MaxMin,us-west,16.80,350.00,Max-Min selected us-west with cost 16.80
+2025-06-04T20:34:04+02:00,job-46,MaxMin,us-west,15.20,350.00,Max-Min selected us-west with cost 15.20
+2025-06-04T20:34:04+02:00,job-47,MaxMin,us-west,24.00,350.00,Max-Min selected us-west with cost 24.00
+2025-06-04T20:34:04+02:00,job-48,MaxMin,us-west,18.40,350.00,Max-Min selected us-west with cost 18.40
+2025-06-04T20:34:04+02:00,job-49,MaxMin,us-west,15.20,350.00,Max-Min selected us-west with cost 15.20
+2025-06-04T20:34:04+02:00,job-50,MaxMin,us-west,18.40,350.00,Max-Min selected us-west with cost 18.40
+2025-06-04T20:34:04+02:00,job-51,MaxMin,eu-central,11.00,500.00,Max-Min selected eu-central with cost 11.00
+2025-06-04T20:34:04+02:00,job-52,MaxMin,eu-central,10.00,500.00,Max-Min selected eu-central with cost 10.00
+2025-06-04T20:34:04+02:00,job-53,MaxMin,eu-central,9.00,500.00,Max-Min selected eu-central with cost 9.00
+2025-06-04T20:34:04+02:00,job-54,MaxMin,eu-central,4.00,500.00,Max-Min selected eu-central with cost 4.00
+2025-06-04T20:34:04+02:00,job-55,MaxMin,us-west,22.40,350.00,Max-Min selected us-west with cost 22.40
+2025-06-04T20:34:04+02:00,job-56,MaxMin,eu-central,2.00,500.00,Max-Min selected eu-central with cost 2.00
+2025-06-04T20:34:04+02:00,job-57,MaxMin,eu-central,16.00,500.00,Max-Min selected eu-central with cost 16.00
+2025-06-04T20:34:04+02:00,job-58,MaxMin,us-west,25.60,350.00,Max-Min selected us-west with cost 25.60
+2025-06-04T20:34:04+02:00,job-59,MaxMin,eu-central,4.00,500.00,Max-Min selected eu-central with cost 4.00
+2025-06-04T20:34:04+02:00,job-60,MaxMin,eu-central,15.00,500.00,Max-Min selected eu-central with cost 15.00
+2025-06-04T20:34:04+02:00,job-61,MaxMin,eu-central,5.00,500.00,Max-Min selected eu-central with cost 5.00
+2025-06-04T20:34:04+02:00,job-62,MaxMin,us-west,18.40,350.00,Max-Min selected us-west with cost 18.40
+2025-06-04T20:34:04+02:00,job-63,MaxMin,eu-central,1.00,500.00,Max-Min selected eu-central with cost 1.00
+2025-06-04T20:34:04+02:00,job-64,MaxMin,eu-central,12.00,500.00,Max-Min selected eu-central with cost 12.00
+2025-06-04T20:34:04+02:00,job-65,MaxMin,us-west,14.40,350.00,Max-Min selected us-west with cost 14.40
+2025-06-04T20:34:04+02:00,job-66,MaxMin,us-west,15.20,350.00,Max-Min selected us-west with cost 15.20
+2025-06-04T20:34:04+02:00,job-67,MaxMin,eu-central,6.00,500.00,Max-Min selected eu-central with cost 6.00
+2025-06-04T20:34:04+02:00,job-68,MaxMin,eu-central,4.00,500.00,Max-Min selected eu-central with cost 4.00
+2025-06-04T20:34:04+02:00,job-69,MaxMin,eu-central,13.00,500.00,Max-Min selected eu-central with cost 13.00
+2025-06-04T20:34:04+02:00,job-70,MaxMin,eu-central,6.00,500.00,Max-Min selected eu-central with cost 6.00
+2025-06-04T20:34:04+02:00,job-71,MaxMin,us-west,23.20,350.00,Max-Min selected us-west with cost 23.20
+2025-06-04T20:34:04+02:00,job-72,MaxMin,eu-central,6.00,500.00,Max-Min selected eu-central with cost 6.00
+2025-06-04T20:34:04+02:00,job-73,MaxMin,us-west,22.40,350.00,Max-Min selected us-west with cost 22.40
+2025-06-04T20:34:04+02:00,job-74,MaxMin,eu-central,13.00,500.00,Max-Min selected eu-central with cost 13.00
+2025-06-04T20:34:04+02:00,job-75,MaxMin,us-west,20.00,350.00,Max-Min selected us-west with cost 20.00
+2025-06-04T20:34:04+02:00,job-76,MaxMin,eu-central,7.00,500.00,Max-Min selected eu-central with cost 7.00
+2025-06-04T20:34:04+02:00,job-77,MaxMin,us-west,25.60,350.00,Max-Min selected us-west with cost 25.60
+2025-06-04T20:34:04+02:00,job-78,MaxMin,us-west,16.80,350.00,Max-Min selected us-west with cost 16.80
+2025-06-04T20:34:04+02:00,job-79,MaxMin,eu-central,5.00,500.00,Max-Min selected eu-central with cost 5.00
+2025-06-04T20:34:04+02:00,job-80,MaxMin,us-west,24.80,350.00,Max-Min selected us-west with cost 24.80
+2025-06-04T20:34:04+02:00,job-81,MaxMin,us-west,16.80,350.00,Max-Min selected us-west with cost 16.80
+2025-06-04T20:34:04+02:00,job-82,MaxMin,eu-central,5.00,500.00,Max-Min selected eu-central with cost 5.00
+2025-06-04T20:34:04+02:00,job-83,MaxMin,us-west,16.80,350.00,Max-Min selected us-west with cost 16.80
+2025-06-04T20:34:04+02:00,job-84,MaxMin,us-west,13.60,350.00,Max-Min selected us-west with cost 13.60
+2025-06-04T20:34:04+02:00,job-85,MaxMin,eu-central,3.00,500.00,Max-Min selected eu-central with cost 3.00
+2025-06-04T20:34:04+02:00,job-86,MaxMin,eu-central,2.00,500.00,Max-Min selected eu-central with cost 2.00
+2025-06-04T20:34:04+02:00,job-87,MaxMin,eu-central,5.00,500.00,Max-Min selected eu-central with cost 5.00
+2025-06-04T20:34:04+02:00,job-88,MaxMin,eu-central,11.00,500.00,Max-Min selected eu-central with cost 11.00
+2025-06-04T20:34:04+02:00,job-89,MaxMin,us-west,24.00,350.00,Max-Min selected us-west with cost 24.00
+2025-06-04T20:34:04+02:00,job-90,MaxMin,eu-central,9.00,500.00,Max-Min selected eu-central with cost 9.00
+2025-06-04T20:34:04+02:00,job-91,MaxMin,us-west,25.60,350.00,Max-Min selected us-west with cost 25.60
+2025-06-04T20:34:04+02:00,job-92,MaxMin,eu-central,4.00,500.00,Max-Min selected eu-central with cost 4.00
+2025-06-04T20:34:04+02:00,job-93,MaxMin,eu-central,16.00,500.00,Max-Min selected eu-central with cost 16.00
+2025-06-04T20:34:04+02:00,job-94,MaxMin,eu-central,13.00,500.00,Max-Min selected eu-central with cost 13.00
+2025-06-04T20:34:04+02:00,job-95,MaxMin,us-west,20.80,350.00,Max-Min selected us-west with cost 20.80
+2025-06-04T20:34:04+02:00,job-96,MaxMin,us-west,18.40,350.00,Max-Min selected us-west with cost 18.40
+2025-06-04T20:34:04+02:00,job-97,MaxMin,us-west,23.20,350.00,Max-Min selected us-west with cost 23.20
+2025-06-04T20:34:04+02:00,job-98,MaxMin,us-west,19.20,350.00,Max-Min selected us-west with cost 19.20
+2025-06-04T20:34:04+02:00,job-99,MaxMin,us-west,13.60,350.00,Max-Min selected us-west with cost 13.60
+2025-06-04T20:34:04+02:00,job-0,EnergyAwareStrategy,us-west,16.00,350.00,Selected us-west with lowest energy cost: 16.00
+2025-06-04T20:34:04+02:00,job-1,EnergyAwareStrategy,us-west,23.20,350.00,Selected us-west with lowest energy cost: 23.20
+2025-06-04T20:34:04+02:00,job-2,EnergyAwareStrategy,us-west,12.80,350.00,Selected us-west with lowest energy cost: 12.80
+2025-06-04T20:34:04+02:00,job-3,EnergyAwareStrategy,us-west,21.60,350.00,Selected us-west with lowest energy cost: 21.60
+2025-06-04T20:34:04+02:00,job-4,EnergyAwareStrategy,us-west,8.80,350.00,Selected us-west with lowest energy cost: 8.80
+2025-06-04T20:34:04+02:00,job-5,EnergyAwareStrategy,us-west,8.80,350.00,Selected us-west with lowest energy cost: 8.80
+2025-06-04T20:34:04+02:00,job-6,EnergyAwareStrategy,low-power-node,0.50,50.00,Selected low-power-node with lowest energy cost: 0.50
+2025-06-04T20:34:04+02:00,job-7,EnergyAwareStrategy,us-west,19.20,350.00,Selected us-west with lowest energy cost: 19.20
+2025-06-04T20:34:04+02:00,job-8,EnergyAwareStrategy,us-west,12.00,350.00,Selected us-west with lowest energy cost: 12.00
+2025-06-04T20:34:04+02:00,job-9,EnergyAwareStrategy,us-west,20.00,350.00,Selected us-west with lowest energy cost: 20.00
+2025-06-04T20:34:04+02:00,job-10,EnergyAwareStrategy,us-west,14.40,350.00,Selected us-west with lowest energy cost: 14.40
+2025-06-04T20:34:04+02:00,job-11,EnergyAwareStrategy,low-power-node,1.00,50.00,Selected low-power-node with lowest energy cost: 1.00
+2025-06-04T20:34:04+02:00,job-12,EnergyAwareStrategy,low-power-node,1.50,50.00,Selected low-power-node with lowest energy cost: 1.50
+2025-06-04T20:34:04+02:00,job-13,EnergyAwareStrategy,us-west,20.00,350.00,Selected us-west with lowest energy cost: 20.00
+2025-06-04T20:34:04+02:00,job-14,EnergyAwareStrategy,us-west,10.40,350.00,Selected us-west with lowest energy cost: 10.40
+2025-06-04T20:34:04+02:00,job-15,EnergyAwareStrategy,us-west,24.80,350.00,Selected us-west with lowest energy cost: 24.80
+2025-06-04T20:34:04+02:00,job-16,EnergyAwareStrategy,low-power-node,0.50,50.00,Selected low-power-node with lowest energy cost: 0.50
+2025-06-04T20:34:04+02:00,job-17,EnergyAwareStrategy,us-west,10.40,350.00,Selected us-west with lowest energy cost: 10.40
+2025-06-04T20:34:04+02:00,job-18,EnergyAwareStrategy,us-west,7.20,350.00,Selected us-west with lowest energy cost: 7.20
+2025-06-04T20:34:04+02:00,job-19,EnergyAwareStrategy,us-west,15.20,350.00,Selected us-west with lowest energy cost: 15.20
+2025-06-04T20:34:04+02:00,job-20,EnergyAwareStrategy,us-west,22.40,350.00,Selected us-west with lowest energy cost: 22.40
+2025-06-04T20:34:04+02:00,job-21,EnergyAwareStrategy,low-power-node,2.50,50.00,Selected low-power-node with lowest energy cost: 2.50
+2025-06-04T20:34:04+02:00,job-22,EnergyAwareStrategy,us-west,13.60,350.00,Selected us-west with lowest energy cost: 13.60
+2025-06-04T20:34:04+02:00,job-23,EnergyAwareStrategy,us-west,25.60,350.00,Selected us-west with lowest energy cost: 25.60
+2025-06-04T20:34:04+02:00,job-24,EnergyAwareStrategy,us-west,14.40,350.00,Selected us-west with lowest energy cost: 14.40
+2025-06-04T20:34:04+02:00,job-25,EnergyAwareStrategy,us-west,24.00,350.00,Selected us-west with lowest energy cost: 24.00
+2025-06-04T20:34:04+02:00,job-26,EnergyAwareStrategy,us-west,8.80,350.00,Selected us-west with lowest energy cost: 8.80
+2025-06-04T20:34:04+02:00,job-27,EnergyAwareStrategy,us-west,21.60,350.00,Selected us-west with lowest energy cost: 21.60
+2025-06-04T20:34:04+02:00,job-28,EnergyAwareStrategy,us-west,20.00,350.00,Selected us-west with lowest energy cost: 20.00
+2025-06-04T20:34:04+02:00,job-29,EnergyAwareStrategy,us-west,13.60,350.00,Selected us-west with lowest energy cost: 13.60
+2025-06-04T20:34:04+02:00,job-30,EnergyAwareStrategy,us-west,12.00,350.00,Selected us-west with lowest energy cost: 12.00
+2025-06-04T20:34:04+02:00,job-31,EnergyAwareStrategy,us-west,9.60,350.00,Selected us-west with lowest energy cost: 9.60
+2025-06-04T20:34:04+02:00,job-32,EnergyAwareStrategy,us-west,20.80,350.00,Selected us-west with lowest energy cost: 20.80
+2025-06-04T20:34:04+02:00,job-33,EnergyAwareStrategy,us-west,20.00,350.00,Selected us-west with lowest energy cost: 20.00
+2025-06-04T20:34:04+02:00,job-34,EnergyAwareStrategy,us-west,17.60,350.00,Selected us-west with lowest energy cost: 17.60
+2025-06-04T20:34:04+02:00,job-35,EnergyAwareStrategy,us-west,7.20,350.00,Selected us-west with lowest energy cost: 7.20
+2025-06-04T20:34:04+02:00,job-36,EnergyAwareStrategy,low-power-node,2.50,50.00,Selected low-power-node with lowest energy cost: 2.50
+2025-06-04T20:34:04+02:00,job-37,EnergyAwareStrategy,us-west,15.20,350.00,Selected us-west with lowest energy cost: 15.20
+2025-06-04T20:34:04+02:00,job-38,EnergyAwareStrategy,us-west,17.60,350.00,Selected us-west with lowest energy cost: 17.60
+2025-06-04T20:34:04+02:00,job-39,EnergyAwareStrategy,us-west,24.00,350.00,Selected us-west with lowest energy cost: 24.00
+2025-06-04T20:34:04+02:00,job-40,EnergyAwareStrategy,us-west,12.00,350.00,Selected us-west with lowest energy cost: 12.00
+2025-06-04T20:34:04+02:00,job-41,EnergyAwareStrategy,us-west,8.00,350.00,Selected us-west with lowest energy cost: 8.00
+2025-06-04T20:34:04+02:00,job-42,EnergyAwareStrategy,low-power-node,3.00,50.00,Selected low-power-node with lowest energy cost: 3.00
+2025-06-04T20:34:04+02:00,job-43,EnergyAwareStrategy,us-west,23.20,350.00,Selected us-west with lowest energy cost: 23.20
+2025-06-04T20:34:04+02:00,job-44,EnergyAwareStrategy,us-west,13.60,350.00,Selected us-west with lowest energy cost: 13.60
+2025-06-04T20:34:04+02:00,job-45,EnergyAwareStrategy,us-west,16.80,350.00,Selected us-west with lowest energy cost: 16.80
+2025-06-04T20:34:04+02:00,job-46,EnergyAwareStrategy,us-west,15.20,350.00,Selected us-west with lowest energy cost: 15.20
+2025-06-04T20:34:04+02:00,job-47,EnergyAwareStrategy,us-west,24.00,350.00,Selected us-west with lowest energy cost: 24.00
+2025-06-04T20:34:04+02:00,job-48,EnergyAwareStrategy,us-west,18.40,350.00,Selected us-west with lowest energy cost: 18.40
+2025-06-04T20:34:04+02:00,job-49,EnergyAwareStrategy,us-west,15.20,350.00,Selected us-west with lowest energy cost: 15.20
+2025-06-04T20:34:04+02:00,job-50,EnergyAwareStrategy,us-west,18.40,350.00,Selected us-west with lowest energy cost: 18.40
+2025-06-04T20:34:04+02:00,job-51,EnergyAwareStrategy,us-west,8.80,350.00,Selected us-west with lowest energy cost: 8.80
+2025-06-04T20:34:04+02:00,job-52,EnergyAwareStrategy,us-west,8.00,350.00,Selected us-west with lowest energy cost: 8.00
+2025-06-04T20:34:04+02:00,job-53,EnergyAwareStrategy,us-west,7.20,350.00,Selected us-west with lowest energy cost: 7.20
+2025-06-04T20:34:04+02:00,job-54,EnergyAwareStrategy,low-power-node,2.00,50.00,Selected low-power-node with lowest energy cost: 2.00
+2025-06-04T20:34:04+02:00,job-55,EnergyAwareStrategy,us-west,22.40,350.00,Selected us-west with lowest energy cost: 22.40
+2025-06-04T20:34:04+02:00,job-56,EnergyAwareStrategy,low-power-node,1.00,50.00,Selected low-power-node with lowest energy cost: 1.00
+2025-06-04T20:34:04+02:00,job-57,EnergyAwareStrategy,us-west,12.80,350.00,Selected us-west with lowest energy cost: 12.80
+2025-06-04T20:34:04+02:00,job-58,EnergyAwareStrategy,us-west,25.60,350.00,Selected us-west with lowest energy cost: 25.60
+2025-06-04T20:34:04+02:00,job-59,EnergyAwareStrategy,low-power-node,2.00,50.00,Selected low-power-node with lowest energy cost: 2.00
+2025-06-04T20:34:04+02:00,job-60,EnergyAwareStrategy,us-west,12.00,350.00,Selected us-west with lowest energy cost: 12.00
+2025-06-04T20:34:04+02:00,job-61,EnergyAwareStrategy,low-power-node,2.50,50.00,Selected low-power-node with lowest energy cost: 2.50
+2025-06-04T20:34:04+02:00,job-62,EnergyAwareStrategy,us-west,18.40,350.00,Selected us-west with lowest energy cost: 18.40
+2025-06-04T20:34:04+02:00,job-63,EnergyAwareStrategy,low-power-node,0.50,50.00,Selected low-power-node with lowest energy cost: 0.50
+2025-06-04T20:34:04+02:00,job-64,EnergyAwareStrategy,us-west,9.60,350.00,Selected us-west with lowest energy cost: 9.60
+2025-06-04T20:34:04+02:00,job-65,EnergyAwareStrategy,us-west,14.40,350.00,Selected us-west with lowest energy cost: 14.40
+2025-06-04T20:34:04+02:00,job-66,EnergyAwareStrategy,us-west,15.20,350.00,Selected us-west with lowest energy cost: 15.20
+2025-06-04T20:34:04+02:00,job-67,EnergyAwareStrategy,low-power-node,3.00,50.00,Selected low-power-node with lowest energy cost: 3.00
+2025-06-04T20:34:04+02:00,job-68,EnergyAwareStrategy,low-power-node,2.00,50.00,Selected low-power-node with lowest energy cost: 2.00
+2025-06-04T20:34:04+02:00,job-69,EnergyAwareStrategy,us-west,10.40,350.00,Selected us-west with lowest energy cost: 10.40
+2025-06-04T20:34:04+02:00,job-70,EnergyAwareStrategy,low-power-node,3.00,50.00,Selected low-power-node with lowest energy cost: 3.00
+2025-06-04T20:34:04+02:00,job-71,EnergyAwareStrategy,us-west,23.20,350.00,Selected us-west with lowest energy cost: 23.20
+2025-06-04T20:34:04+02:00,job-72,EnergyAwareStrategy,low-power-node,3.00,50.00,Selected low-power-node with lowest energy cost: 3.00
+2025-06-04T20:34:04+02:00,job-73,EnergyAwareStrategy,us-west,22.40,350.00,Selected us-west with lowest energy cost: 22.40
+2025-06-04T20:34:04+02:00,job-74,EnergyAwareStrategy,us-west,10.40,350.00,Selected us-west with lowest energy cost: 10.40
+2025-06-04T20:34:04+02:00,job-75,EnergyAwareStrategy,us-west,20.00,350.00,Selected us-west with lowest energy cost: 20.00
+2025-06-04T20:34:04+02:00,job-76,EnergyAwareStrategy,low-power-node,3.50,50.00,Selected low-power-node with lowest energy cost: 3.50
+2025-06-04T20:34:04+02:00,job-77,EnergyAwareStrategy,us-west,25.60,350.00,Selected us-west with lowest energy cost: 25.60
+2025-06-04T20:34:04+02:00,job-78,EnergyAwareStrategy,us-west,16.80,350.00,Selected us-west with lowest energy cost: 16.80
+2025-06-04T20:34:04+02:00,job-79,EnergyAwareStrategy,low-power-node,2.50,50.00,Selected low-power-node with lowest energy cost: 2.50
+2025-06-04T20:34:04+02:00,job-80,EnergyAwareStrategy,us-west,24.80,350.00,Selected us-west with lowest energy cost: 24.80
+2025-06-04T20:34:04+02:00,job-81,EnergyAwareStrategy,us-west,16.80,350.00,Selected us-west with lowest energy cost: 16.80
+2025-06-04T20:34:04+02:00,job-82,EnergyAwareStrategy,low-power-node,2.50,50.00,Selected low-power-node with lowest energy cost: 2.50
+2025-06-04T20:34:04+02:00,job-83,EnergyAwareStrategy,us-west,16.80,350.00,Selected us-west with lowest energy cost: 16.80
+2025-06-04T20:34:04+02:00,job-84,EnergyAwareStrategy,us-west,13.60,350.00,Selected us-west with lowest energy cost: 13.60
+2025-06-04T20:34:04+02:00,job-85,EnergyAwareStrategy,low-power-node,1.50,50.00,Selected low-power-node with lowest energy cost: 1.50
+2025-06-04T20:34:04+02:00,job-86,EnergyAwareStrategy,low-power-node,1.00,50.00,Selected low-power-node with lowest energy cost: 1.00
+2025-06-04T20:34:04+02:00,job-87,EnergyAwareStrategy,low-power-node,2.50,50.00,Selected low-power-node with lowest energy cost: 2.50
+2025-06-04T20:34:04+02:00,job-88,EnergyAwareStrategy,us-west,8.80,350.00,Selected us-west with lowest energy cost: 8.80
+2025-06-04T20:34:04+02:00,job-89,EnergyAwareStrategy,us-west,24.00,350.00,Selected us-west with lowest energy cost: 24.00
+2025-06-04T20:34:04+02:00,job-90,EnergyAwareStrategy,us-west,7.20,350.00,Selected us-west with lowest energy cost: 7.20
+2025-06-04T20:34:04+02:00,job-91,EnergyAwareStrategy,us-west,25.60,350.00,Selected us-west with lowest energy cost: 25.60
+2025-06-04T20:34:04+02:00,job-92,EnergyAwareStrategy,low-power-node,2.00,50.00,Selected low-power-node with lowest energy cost: 2.00
+2025-06-04T20:34:04+02:00,job-93,EnergyAwareStrategy,us-west,12.80,350.00,Selected us-west with lowest energy cost: 12.80
+2025-06-04T20:34:04+02:00,job-94,EnergyAwareStrategy,us-west,10.40,350.00,Selected us-west with lowest energy cost: 10.40
+2025-06-04T20:34:04+02:00,job-95,EnergyAwareStrategy,us-west,20.80,350.00,Selected us-west with lowest energy cost: 20.80
+2025-06-04T20:34:04+02:00,job-96,EnergyAwareStrategy,us-west,18.40,350.00,Selected us-west with lowest energy cost: 18.40
+2025-06-04T20:34:04+02:00,job-97,EnergyAwareStrategy,us-west,23.20,350.00,Selected us-west with lowest energy cost: 23.20
+2025-06-04T20:34:04+02:00,job-98,EnergyAwareStrategy,us-west,19.20,350.00,Selected us-west with lowest energy cost: 19.20
+2025-06-04T20:34:04+02:00,job-99,EnergyAwareStrategy,us-west,13.60,350.00,Selected us-west with lowest energy cost: 13.60
