@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: synthetic-workload
+spec:
+  template:
+    metadata:
+      labels:
+        app: synthetic-workload
+    spec:
+      containers:
+        - name: workload
+          image: yourregistry/synthetic-workload:latest
+          env:
+            - name: WORKLOAD_PATTERN
+              value: "{{ .Values.workloadPattern }}"
+      restartPolicy: Never
+  backoffLimit: 4

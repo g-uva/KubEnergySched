@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: centralunit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: centralunit
+  template:
+    metadata:
+      labels:
+        app: centralunit
+    spec:
+      containers:
+        - name: centralunit
+          image: yourregistry/centralunit:latest
+          ports:
+            - containerPort: 2112
+          env:
+            - name: REGION
+              value: "{{ .Values.region }}"
+            - name: CLUSTER_NAME
+              value: "{{ .Values.clusterName }}"
+            - name: CPU_CAPACITY
+              value: "{{ .Values.cpuCapacity | quote }}"
+            - name: ENERGY_BIAS
+              value: "{{ .Values.energyBias | quote }}"
+            - name: CARBON_INTENSITY
+              value: "{{ .Values.carbonIntensity | quote }}"
