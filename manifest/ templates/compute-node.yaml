@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: centralunit
+  name: compute-node
+  labels:
+    app: compute-node
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: centralunit
+      app: compute-node
   template:
     metadata:
       labels:
-        app: centralunit
+        app: compute-node
     spec:
       containers:
-        - name: centralunit
-          image: g-uva/centralunit:latest
-          ports:
-            - containerPort: 2112
+        - name: compute
+          image: g-uva/compute-node:latest
           env:
             - name: REGION
               value: "{{ .Values.region }}"

@@ -10,7 +10,7 @@ spec:
     spec:
       containers:
         - name: workload
-          image: yourregistry/synthetic-workload:latest
+          image: g-uva/synthetic-workload:latest
           env:
             - name: WORKLOAD_PATTERN
               value: "{{ .Values.workloadPattern }}"
