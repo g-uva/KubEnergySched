@@ -2,7 +2,6 @@ package centralunit
 
 import (
 	"fmt"
-	"math/rand"
 	"reflect"
 	"time"
 )
@@ -36,8 +35,8 @@ type SimulatedCluster struct {
 	Location        string
 }
 
-func (c SimulatedCluster) Name() string                        { return c.ClusterName }
-func (c SimulatedCluster) CanAccept(w Workload) bool          { return w.CPURequirement <= c.MaxCPU }
+func (c SimulatedCluster) Name() string                          { return c.ClusterName }
+func (c SimulatedCluster) CanAccept(w Workload) bool             { return w.CPURequirement <= c.MaxCPU }
 func (c SimulatedCluster) EstimateEnergyCost(w Workload) float64 { return float64(w.CPURequirement) * c.EnergyBias }
 func (c SimulatedCluster) SubmitJob(w Workload) error {
 	fmt.Printf("[Cluster %s] Job %s submitted (CPU: %d, EnergyBias: %.2f, SCI: %.1f)\n",
@@ -168,38 +167,5 @@ func (cu CentralUnit) Dispatch(workloads []Workload) {
 			Reasoning:       reason,
 		}
 		decisionLog = append(decisionLog, decision)
-	}
-}
-
-func main() {
-	rand.Seed(time.Now().UnixNano())
-
-	clusters := []Cluster{
-		SimulatedCluster{"eu-central", 16, 1.0, 500, 0, "EU"},
-		SimulatedCluster{"us-west", 32, 0.8, 350, 0, "US"},
-		SimulatedCluster{"low-power-node", 8, 0.5, 50, 0, "NL"},
-	}
-	workloads := []Workload{
-		{"job-1", 10, 1.0},
-		{"job-2", 20, 0.5},
-		{"job-3", 6, 0.9},
-		{"job-4", 32, 0.4},
-		{"job-5", 4, 1.0},
-	}
-
-	// Switch between strategies
-	strategies := []SchedulingStrategy{
-		FCFS{}, &RoundRobin{}, MinMin{}, MaxMin{}, EnergyAwareStrategy{},
-	}
-	for _, strategy := range strategies {
-		fmt.Printf("\n--- Running with strategy: %s ---\n", reflect.TypeOf(strategy).Name())
-		cu := CentralUnit{Clusters: clusters, Strategy: strategy}
-		cu.Dispatch(workloads)
-	}
-
-	// Export decision log
-	fmt.Println("\n--- Decision Log ---")
-	for _, d := range decisionLog {
-		fmt.Printf("%+v\n", d)
 	}
 }
