@@ -238,4 +238,5 @@ func main() {
 	} else {
 		fmt.Printf("Loaded %d clusters from file\n", len(clusters))
 	}
+	select {} // Keep the container running. :)
 }
