@@ -1,10 +1,9 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: compute-node
-  labels:
-    app: compute-node
+  name: compute
 spec:
+  serviceName: compute
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -21,10 +20,15 @@ spec:
             - name: REGION
               value: "{{ .Values.region }}"
             - name: CLUSTER_NAME
-              value: "{{ .Values.clusterName }}"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name  # e.g., compute-0, compute-1
             - name: CPU_CAPACITY
               value: "{{ .Values.cpuCapacity }}"
             - name: ENERGY_BIAS
               value: "{{ .Values.energyBias }}"
             - name: CARBON_INTENSITY
               value: "{{ .Values.carbonIntensity }}"
+          ports:
+            - containerPort: 2112
+              name: metrics

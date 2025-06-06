@@ -28,3 +28,11 @@ spec:
               value: "{{ .Values.energyBias }}"
             - name: CARBON_INTENSITY
               value: "{{ .Values.carbonIntensity }}"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: centralunit-config

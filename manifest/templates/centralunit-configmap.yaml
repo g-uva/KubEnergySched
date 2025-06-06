@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: centralunit-config
+data:
+  clusters.json: |
+    [
+    {{- $replicas := int .Values.replicaCount }}
+    {{- range $i, $ := until $replicas }}
+      {
+        "name": "compute-{{ $i }}",
+        "url": "http://compute-{{ $i }}.compute:2112"
+      }{{ if ne (add1 $i) $replicas }},{{ end }}
+    {{- end }}
+    ]

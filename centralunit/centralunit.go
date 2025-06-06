@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"time"
+	"encoding/json"
+	"os"
 )
 
 /*
@@ -209,7 +211,31 @@ func RunContainerWorkload() {
 	unit.Dispatch(workloads)
 }
 
-// func main() {
-// 	result := 1 + 1
-// 	fmt.Println("The result of 1 + 1 is:", result)
-// }
+// This is finally a "real" cluster :)
+type RemoteCluster struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}
+
+func LoadClustersFromFile(path string) ([]RemoteCluster, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var clusters []RemoteCluster
+	err = json.NewDecoder(file).Decode(&clusters)
+	return clusters, err
+}
+
+func main() {
+	fmt.Println("Loading clusters from file...")
+	clusters, err := LoadClustersFromFile("/config/clusters.json")
+	if err != nil {
+		fmt.Printf("Error loading clusters: %v\n", err)
+		return
+	} else {
+		fmt.Printf("Loaded %d clusters from file\n", len(clusters))
+	}
+}

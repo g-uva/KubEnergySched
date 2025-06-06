@@ -1,4 +1,4 @@
-package computenode
+package main
 
 import (
 	"fmt"
