@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: centralunit
-          image: g-uva/centralunit:latest
+          image: "goncaloferreirauva/centralunit:latest"
           ports:
             - containerPort: 2112
           env:
@@ -23,8 +23,8 @@ spec:
             - name: CLUSTER_NAME
               value: "{{ .Values.clusterName }}"
             - name: CPU_CAPACITY
-              value: "{{ .Values.cpuCapacity | quote }}"
+              value: "{{ .Values.cpuCapacity }}"
             - name: ENERGY_BIAS
-              value: "{{ .Values.energyBias | quote }}"
+              value: "{{ .Values.energyBias }}"
             - name: CARBON_INTENSITY
-              value: "{{ .Values.carbonIntensity | quote }}"
+              value: "{{ .Values.carbonIntensity }}"

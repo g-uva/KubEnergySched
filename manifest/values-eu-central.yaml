@@ -1,0 +1,8 @@
+region: eu-central
+clusterName: green-node
+cpuCapacity: "16"
+energyBias: "0.6"
+carbonIntensity: "100"
+workloadPattern: burst
+replicaCount: 3
+centralUnitImage: "goncaloferreirauva/centralunit:latest"

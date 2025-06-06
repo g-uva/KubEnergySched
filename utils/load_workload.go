@@ -4,7 +4,7 @@ import (
 	"encoding/csv"
 	"os"
 	"strconv"
-	"kube-scheduler/central-unit"
+	"kube-scheduler/centralunit"
 )
 
 func LoadWorkloadsFromCSV(path string) ([]centralunit.Workload, error) {

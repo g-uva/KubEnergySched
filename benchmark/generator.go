@@ -1,7 +1,7 @@
 package benchmark
 
 import (
-	"kube-scheduler/central-unit"
+	"kube-scheduler/centralunit"
 	"fmt"
 	"math/rand"
 )

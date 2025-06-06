@@ -2,7 +2,7 @@ package main
 
 import (
 	benchmark "kube-scheduler/benchmark"
-	centralunit "kube-scheduler/central-unit"
+	centralunit "kube-scheduler/centralunit"
 )
 
 func main() {

@@ -27,17 +27,19 @@ type Cluster interface {
 }
 
 type SimulatedCluster struct {
-	ClusterName     string
-	MaxCPU          int
-	EnergyBias      float64
-	SCI_kWh         float64
-	CurrentLoad     float64
-	Location        string
+	ClusterName string
+	MaxCPU      int
+	EnergyBias  float64
+	SCI_kWh     float64
+	CurrentLoad float64
+	Location    string
 }
 
-func (c SimulatedCluster) Name() string                          { return c.ClusterName }
-func (c SimulatedCluster) CanAccept(w Workload) bool             { return w.CPURequirement <= c.MaxCPU }
-func (c SimulatedCluster) EstimateEnergyCost(w Workload) float64 { return float64(w.CPURequirement) * c.EnergyBias }
+func (c SimulatedCluster) Name() string              { return c.ClusterName }
+func (c SimulatedCluster) CanAccept(w Workload) bool { return w.CPURequirement <= c.MaxCPU }
+func (c SimulatedCluster) EstimateEnergyCost(w Workload) float64 {
+	return float64(w.CPURequirement) * c.EnergyBias
+}
 func (c SimulatedCluster) SubmitJob(w Workload) error {
 	fmt.Printf("[Cluster %s] Job %s submitted (CPU: %d, EnergyBias: %.2f, SCI: %.1f)\n",
 		c.ClusterName, w.ID, w.CPURequirement, c.EnergyBias, c.SCI_kWh)
@@ -51,8 +53,11 @@ type SchedulingStrategy interface {
 }
 
 type FCFS struct{}
+
 func (s FCFS) SelectCluster(clusters []Cluster, w Workload) (Cluster, string, error) {
-	for _, c := range clusters {
+	n := len(clusters)
+	for i := 0; i < n; i++ {
+		c := clusters[i]
 		if c.CanAccept(w) {
 			return c, "Selected first available cluster", nil
 		}
@@ -63,9 +68,10 @@ func (s FCFS) SelectCluster(clusters []Cluster, w Workload) (Cluster, string, er
 type RoundRobin struct {
 	counter int
 }
+
 func (s *RoundRobin) SelectCluster(clusters []Cluster, w Workload) (Cluster, string, error) {
 	n := len(clusters)
-	for i := range n {
+	for i := 0; i < n; i++ {
 		c := clusters[(s.counter+i)%n]
 		if c.CanAccept(w) {
 			s.counter = (s.counter + 1) % n
@@ -76,10 +82,13 @@ func (s *RoundRobin) SelectCluster(clusters []Cluster, w Workload) (Cluster, str
 }
 
 type MinMin struct{}
+
 func (s MinMin) SelectCluster(clusters []Cluster, w Workload) (Cluster, string, error) {
 	var best Cluster
 	minCost := 1e9
-	for _, c := range clusters {
+	n := len(clusters)
+	for i := 0; i < n; i++ {
+		c := clusters[i]
 		if c.CanAccept(w) {
 			cost := c.EstimateEnergyCost(w)
 			if cost < minCost {
@@ -95,10 +104,13 @@ func (s MinMin) SelectCluster(clusters []Cluster, w Workload) (Cluster, string, 
 }
 
 type MaxMin struct{}
+
 func (s MaxMin) SelectCluster(clusters []Cluster, w Workload) (Cluster, string, error) {
 	var best Cluster
 	maxCost := -1.0
-	for _, c := range clusters {
+	n := len(clusters)
+	for i := 0; i < n; i++ {
+		c := clusters[i]
 		if c.CanAccept(w) {
 			cost := c.EstimateEnergyCost(w)
 			if cost > maxCost {
@@ -114,11 +126,16 @@ func (s MaxMin) SelectCluster(clusters []Cluster, w Workload) (Cluster, string, 
 }
 
 type EnergyAwareStrategy struct{}
+
 func (s EnergyAwareStrategy) SelectCluster(clusters []Cluster, w Workload) (Cluster, string, error) {
 	var best Cluster
 	minCost := 1e9
-	for _, c := range clusters {
-		if !c.CanAccept(w) { continue }
+	n := len(clusters)
+	for i := 0; i < n; i++ {
+		c := clusters[i]
+		if !c.CanAccept(w) {
+			continue
+		}
 		cost := c.EstimateEnergyCost(w)
 		if cost < minCost {
 			minCost = cost
@@ -150,7 +167,9 @@ type SchedulingDecision struct {
 var decisionLog []SchedulingDecision
 
 func (cu CentralUnit) Dispatch(workloads []Workload) {
-	for _, w := range workloads {
+	n := len(workloads)
+	for i := 0; i < n; i++ {
+		w := workloads[i]
 		selected, reason, err := cu.Strategy.SelectCluster(cu.Clusters, w)
 		if err != nil {
 			fmt.Printf("[CentralUnit] Failed to schedule %s: %v\n", w.ID, err)
@@ -169,3 +188,24 @@ func (cu CentralUnit) Dispatch(workloads []Workload) {
 		decisionLog = append(decisionLog, decision)
 	}
 }
+
+func RunContainerWorkload() {
+	// Example setup
+	clusters := []Cluster{
+		SimulatedCluster{ClusterName: "ClusterA", MaxCPU: 10, EnergyBias: 1.2, SCI_kWh: 350.0},
+		SimulatedCluster{ClusterName: "ClusterB", MaxCPU: 20, EnergyBias: 0.8, SCI_kWh: 250.0},
+	}
+
+	workloads := []Workload{
+		{ID: "job1", CPURequirement: 5, EnergyPriority: 0.9},
+		{ID: "job2", CPURequirement: 15, EnergyPriority: 0.6},
+	}
+
+	unit := CentralUnit{
+		Clusters: clusters,
+		Strategy: &RoundRobin{},
+	}
+
+	unit.Dispatch(workloads)
+}
+

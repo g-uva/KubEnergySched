@@ -6,7 +6,7 @@ import (
     "os"
     "time"
     "reflect"
-    "kube-scheduler/central-unit"
+    "kube-scheduler/centralunit"
     "encoding/hex"
     "crypto/rand"
 )
