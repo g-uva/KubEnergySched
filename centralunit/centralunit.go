@@ -208,3 +208,8 @@ func RunContainerWorkload() {
 
 	unit.Dispatch(workloads)
 }
+
+// func main() {
+// 	result := 1 + 1
+// 	fmt.Println("The result of 1 + 1 is:", result)
+// }
