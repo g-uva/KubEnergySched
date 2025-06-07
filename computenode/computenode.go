@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"time"
+	// "time"
 	"encoding/json"
 
 	"github.com/prometheus/client_golang/prometheus"
