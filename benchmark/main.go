@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	clusters, _ := core.LoadClustersFromFile("config/clusters.json")
+	clusters, _ := core.LoadClustersFromFile("/config/clusters.json")
 
 	ba := benchmark.BenchmarkAdapter{
 		Clusters:   toClusterInterface(clusters),

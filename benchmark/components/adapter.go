@@ -34,13 +34,19 @@ func (ba *BenchmarkAdapter) RunBenchmark() {
     for _, strategy := range ba.Strategies {
         fmt.Printf("\n[Benchmark] Running with strategy: %s\n", reflect.TypeOf(strategy).Name())
         cu := core.CentralUnit{Clusters: ba.Clusters, Strategy: strategy}
+
         for _, w := range ba.Workloads {
             selected, reason, err := cu.Strategy.SelectCluster(cu.Clusters, w)
             if err != nil {
                 fmt.Printf("Failed to schedule %s: %v\n", w.ID, err)
                 continue
             }
-            selected.SubmitJob(w)
+
+            if err := selected.SubmitJob(w); err != nil {
+                fmt.Printf("[Benchmark] Submit error for %s: %v\n", w.ID, err)
+                continue
+            }
+
             record := BenchmarkRecord{
                 Timestamp:       time.Now().Format(time.RFC3339),
                 WorkloadID:      w.ID,
