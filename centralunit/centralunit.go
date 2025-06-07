@@ -1,4 +1,4 @@
-package centralunit
+package main
 
 import (
 	"fmt"
@@ -6,14 +6,19 @@ import (
 	"time"
 	"encoding/json"
 	"os"
+	"bufio"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
-/*
-Next I need the code o be exposed at /metrics in Promtheus. Possibly I need to create a Go server and exporter with a Prometheus client library.
-I already have a configuration for each POD with a Scaphandre agent sidecar.
-*/
 
-// --- Types (As in your original) ---
+
+type RemoteCluster struct {
+	NameKey string `json:"name"`
+	URL  string `json:"url"`
+}
+
 type Workload struct {
 	ID             string
 	CPURequirement int
@@ -211,12 +216,6 @@ func RunContainerWorkload() {
 	unit.Dispatch(workloads)
 }
 
-// This is finally a "real" cluster :)
-type RemoteCluster struct {
-	Name string `json:"name"`
-	URL  string `json:"url"`
-}
-
 func LoadClustersFromFile(path string) ([]RemoteCluster, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -229,14 +228,77 @@ func LoadClustersFromFile(path string) ([]RemoteCluster, error) {
 	return clusters, err
 }
 
+func (c RemoteCluster) Name() string { return c.NameKey }
+
+func (c RemoteCluster) CanAccept(w Workload) bool {
+	cpu, err := c.GetMetricValue("compute_node_cpu_usage")
+	if err != nil {
+		return false
+	}
+	// Assume node can accept job if CPU is below a threshold
+	return cpu < 90.0
+}
+
+func (c RemoteCluster) EstimateEnergyCost(w Workload) float64 {
+	// Simplified: base cost = CPU × 1.0
+	return float64(w.CPURequirement)
+}
+
+func (c RemoteCluster) SubmitJob(w Workload) error {
+	fmt.Printf("[RemoteCluster %s] Pretending to submit job %s\n", c.Name, w.ID)
+	return nil // Replace with real logic if needed
+}
+
+func (c RemoteCluster) CarbonIntensity() float64 {
+	// Placeholder — could scrape a real metric
+	return 300.0
+}
+
+func (c RemoteCluster) GetMetricValue(metricName string) (float64, error) {
+	resp, err := http.Get(c.URL + "/metrics")
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, metricName) {
+			parts := strings.Fields(line)
+			if len(parts) == 2 {
+				return strconv.ParseFloat(parts[1], 64)
+			}
+		}
+	}
+	return 0, fmt.Errorf("metric %s not found", metricName)
+}
+
 func main() {
 	fmt.Println("Loading clusters from file...")
-	clusters, err := LoadClustersFromFile("/config/clusters.json")
+	clustersRaw, err := LoadClustersFromFile("/config/clusters.json")
 	if err != nil {
 		fmt.Printf("Error loading clusters: %v\n", err)
 		return
 	} else {
-		fmt.Printf("Loaded %d clusters from file\n", len(clusters))
+		fmt.Printf("Loaded %d clusters from file\n", len(clustersRaw))
 	}
-	select {} // Keep the container running. :)
+	
+	// Wrap into []Cluster interface
+	var clusters []Cluster
+	for _, rc := range clustersRaw {
+		clusters = append(clusters, rc)
+	}
+
+	unit := CentralUnit{
+		Clusters: clusters,
+		Strategy: &RoundRobin{},
+	}
+
+	workloads := []Workload{
+		{ID: "job1", CPURequirement: 4, EnergyPriority: 0.7},
+		{ID: "job2", CPURequirement: 2, EnergyPriority: 0.4},
+	}
+
+	unit.Dispatch(workloads)
 }
