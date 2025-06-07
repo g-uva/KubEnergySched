@@ -1,15 +1,15 @@
 package benchmark
 
 import (
-	"kube-scheduler/centralunit"
-	"fmt"
+    "fmt"
 	"math/rand"
+	"kube-scheduler/pkg/core"
 )
 
-func GenerateSyntheticWorkloads(num_jobs int) []centralunit.Workload {
-	workloads := []centralunit.Workload{}
+func GenerateSyntheticWorkloads(num_jobs int) []core.Workload {
+	workloads := []core.Workload{}
 	for i := 0; i < num_jobs; i++ {
-		w := centralunit.Workload{
+		w := core.Workload{
 			ID: fmt.Sprintf("job-%d", i),
 			CPURequirement: rand.Intn(32) + 1, // Between 1 and 32 CPU cores
 			EnergyPriority: rand.Float64(), // Between 0.0 and 1.0
@@ -29,8 +29,8 @@ const (
     Mixed Pattern = "mixed"
 )
 
-func GeneratePatternedWorkloads(num int, pattern Pattern) []centralunit.Workload {
-    var workloads []centralunit.Workload
+func GeneratePatternedWorkloads(num int, pattern Pattern) []core.Workload {
+    var workloads []core.Workload
     for i := 0; i < num; i++ {
         var cpu int
         var energy float64
@@ -53,7 +53,7 @@ func GeneratePatternedWorkloads(num int, pattern Pattern) []centralunit.Workload
             return append(workloads, GeneratePatternedWorkloads(1, sub[rand.Intn(len(sub))])...)
         }
 
-        workloads = append(workloads, centralunit.Workload{
+        workloads = append(workloads, core.Workload{
             ID: fmt.Sprintf("%s-job-%d", pattern, i),
             CPURequirement: cpu,
             EnergyPriority: energy,

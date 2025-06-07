@@ -1,15 +1,15 @@
 package main
 
 import (
-	benchmark "kube-scheduler/benchmark"
-	centralunit "kube-scheduler/centralunit"
+	benchmark "kube-scheduler/benchmark/components"
+	core "kube-scheduler/pkg/core"
 )
 
 func main() {
-	clusters := []centralunit.Cluster{
-		centralunit.SimulatedCluster{"eu-central", 16, 1.0, 500, 0, "EU"},
-		centralunit.SimulatedCluster{"us-west", 32, 0.8, 350, 0, "US"},
-		centralunit.SimulatedCluster{"low-power-node", 8, 0.5, 50, 0, "NL"},
+	clusters := []core.Cluster{
+		core.SimulatedCluster{"eu-central", 16, 1.0, 500, 0, "EU"},
+		core.SimulatedCluster{"us-west", 32, 0.8, 350, 0, "US"},
+		core.SimulatedCluster{"low-power-node", 8, 0.5, 50, 0, "NL"},
 	}
 
 	// workloads := []centralunit.Workload{
@@ -23,12 +23,12 @@ func main() {
     // Generate synthetic workloads
     workloads := benchmark.GenerateSyntheticWorkloads(100)
 
-	strategies := []centralunit.SchedulingStrategy{
-		centralunit.FCFS{},
-		&centralunit.RoundRobin{},
-		centralunit.MinMin{},
-		centralunit.MaxMin{},
-		centralunit.EnergyAwareStrategy{},
+	strategies := []core.SchedulingStrategy{
+		core.FCFS{},
+		&core.RoundRobin{},
+		core.MinMin{},
+		core.MaxMin{},
+		core.EnergyAwareStrategy{},
 	}
 
 	adapter := benchmark.BenchmarkAdapter{

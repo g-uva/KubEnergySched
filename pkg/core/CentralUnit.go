@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"time"
+	"os"
+	"encoding/json"
 )
 
 type CentralUnit struct {
@@ -44,4 +46,16 @@ func (cu CentralUnit) Dispatch(workloads []Workload) {
 		}
 		decisionLog = append(decisionLog, decision)
 	}
+}
+
+func LoadClustersFromFile(path string) ([]RemoteCluster, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var clusters []RemoteCluster
+	err = json.NewDecoder(file).Decode(&clusters)
+	return clusters, err
 }

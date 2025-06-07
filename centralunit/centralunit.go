@@ -3,28 +3,13 @@ package main
 import (
 	"fmt"
 	"time"
-	"encoding/json"
-	"os"
 	"kube-scheduler/pkg/core"
 )
 
 
-
-func LoadClustersFromFile(path string) ([]core.RemoteCluster, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var clusters []core.RemoteCluster
-	err = json.NewDecoder(file).Decode(&clusters)
-	return clusters, err
-}
-
 func main() {
 	fmt.Println("Loading clusters from file...")
-	clustersRaw, err := LoadClustersFromFile("/config/clusters.json")
+	clustersRaw, err := core.LoadClustersFromFile("/config/clusters.json")
 	if err != nil {
 		fmt.Println("Error loading clusters:", err)
 		return
