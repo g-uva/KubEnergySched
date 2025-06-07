@@ -6,9 +6,9 @@ import (
     "os"
     "time"
     "reflect"
-    "kube-scheduler/centralunit"
     "encoding/hex"
     "crypto/rand"
+    "kube-scheduler/pkg/core"
 )
 
 // BenchmarkRecord holds detailed benchmark logs
@@ -24,16 +24,16 @@ type BenchmarkRecord struct {
 
 // BenchmarkAdapter adapts workloads into benchmarking runs
 type BenchmarkAdapter struct {
-    Clusters   []centralunit.Cluster
-    Strategies []centralunit.SchedulingStrategy
-    Workloads  []centralunit.Workload
+    Clusters   []core.Cluster
+    Strategies []core.SchedulingStrategy
+    Workloads  []core.Workload
     Results    []BenchmarkRecord
 }
 
 func (ba *BenchmarkAdapter) RunBenchmark() {
     for _, strategy := range ba.Strategies {
         fmt.Printf("\n[Benchmark] Running with strategy: %s\n", reflect.TypeOf(strategy).Name())
-        cu := centralunit.CentralUnit{Clusters: ba.Clusters, Strategy: strategy}
+        cu := core.CentralUnit{Clusters: ba.Clusters, Strategy: strategy}
         for _, w := range ba.Workloads {
             selected, reason, err := cu.Strategy.SelectCluster(cu.Clusters, w)
             if err != nil {
