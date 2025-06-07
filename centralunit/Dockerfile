@@ -1,7 +1,10 @@
-FROM golang:1.21 AS builder
+FROM golang:1.24.4-alpine AS builder
 
 WORKDIR /app
-COPY . .
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY ./centralunit .
 RUN go build -o centralunit centralunit.go && chmod +X centralunit
 
 FROM gcr.io/distroless/base-debian11

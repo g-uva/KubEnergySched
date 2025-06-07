@@ -10,9 +10,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"bytes"
 )
-
-
 
 type RemoteCluster struct {
 	NameKey string `json:"name"`
@@ -196,26 +195,6 @@ func (cu CentralUnit) Dispatch(workloads []Workload) {
 	}
 }
 
-func RunContainerWorkload() {
-	// Example setup
-	clusters := []Cluster{
-		SimulatedCluster{ClusterName: "ClusterA", MaxCPU: 10, EnergyBias: 1.2, SCI_kWh: 350.0},
-		SimulatedCluster{ClusterName: "ClusterB", MaxCPU: 20, EnergyBias: 0.8, SCI_kWh: 250.0},
-	}
-
-	workloads := []Workload{
-		{ID: "job1", CPURequirement: 5, EnergyPriority: 0.9},
-		{ID: "job2", CPURequirement: 15, EnergyPriority: 0.6},
-	}
-
-	unit := CentralUnit{
-		Clusters: clusters,
-		Strategy: &RoundRobin{},
-	}
-
-	unit.Dispatch(workloads)
-}
-
 func LoadClustersFromFile(path string) ([]RemoteCluster, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -245,8 +224,26 @@ func (c RemoteCluster) EstimateEnergyCost(w Workload) float64 {
 }
 
 func (c RemoteCluster) SubmitJob(w Workload) error {
-	fmt.Printf("[RemoteCluster %s] Pretending to submit job %s\n", c.Name, w.ID)
-	return nil // Replace with real logic if needed
+	payload := map[string]interface{}{
+		"id": w.ID,
+		"cpu": w.CPURequirement,
+		"priority": w.EnergyPriority,
+	}
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.Post(c.URL+"/submit", "application/json", bytes.NewReader(jsonData))
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("submit failed: status %d", resp.StatusCode)
+	}
+
+	fmt.Printf("[RemoteCluster %s] Job %s submitted (CPU: %d, Priority: %.2f)\n",
+		c.Name, w.ID, w.CPURequirement, w.EnergyPriority)
+	return nil
 }
 
 func (c RemoteCluster) CarbonIntensity() float64 {
@@ -278,12 +275,11 @@ func main() {
 	fmt.Println("Loading clusters from file...")
 	clustersRaw, err := LoadClustersFromFile("/config/clusters.json")
 	if err != nil {
-		fmt.Printf("Error loading clusters: %v\n", err)
+		fmt.Println("Error loading clusters:", err)
 		return
-	} else {
-		fmt.Printf("Loaded %d clusters from file\n", len(clustersRaw))
 	}
-	
+	fmt.Printf("Loaded %d clusters from file\n", len(clustersRaw))
+
 	// Wrap into []Cluster interface
 	var clusters []Cluster
 	for _, rc := range clustersRaw {

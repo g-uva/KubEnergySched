@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"encoding/json"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -37,21 +38,43 @@ func init() {
 	prometheus.MustRegister(cpuUsage)
 }
 
-func simulateJobs() {
-	for {
-		sleep := time.Duration(rand.Intn(7)+3) * time.Second
-		time.Sleep(sleep)
+// func simulateJobs() {
+// 	for {
+// 		sleep := time.Duration(rand.Intn(7)+3) * time.Second
+// 		time.Sleep(sleep)
 
-		jobCount.Inc()
-		cpu := 30 + rand.Float64()*60 // 30% to 90%
-		cpuUsage.Set(cpu)
+// 		jobCount.Inc()
+// 		cpu := 30 + rand.Float64()*60 // 30% to 90%
+// 		cpuUsage.Set(cpu)
 
-		fmt.Printf("Executed fake job, CPU: %.2f%%\n", cpu)
+// 		fmt.Printf("Executed fake job, CPU: %.2f%%\n", cpu)
+// 	}
+// }
+
+type JobRequest struct {
+	ID             string  `json:"id"`
+	CPURequirement int     `json:"cpu"`
+	EnergyPriority float64 `json:"priority"`
+}
+
+func handleJobSubmit(w http.ResponseWriter, r *http.Request) {
+	var job JobRequest
+	err := json.NewDecoder(r.Body).Decode(&job)
+	if err != nil {
+		http.Error(w, "Invalid job format", http.StatusBadRequest)
+		return
 	}
+
+	jobCount.Inc()
+	cpu := 30 + rand.Float64()*60 // simulate CPU impact
+	cpuUsage.Set(cpu)
+
+	fmt.Printf("Job submitted: %+v | CPU now %.2f%%\n", job, cpu)
+	w.WriteHeader(http.StatusOK)
 }
 
 func main() {
-	go simulateJobs()
+	// go simulateJobs()
 
 	http.Handle("/metrics", promhttp.Handler())
 	port := "2112"
@@ -60,4 +83,8 @@ func main() {
 	}
 	fmt.Printf("Serving metrics on :%s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
+
+	http.Handle("/metrics", promhttp.Handler())
+	http.HandleFunc("/submit", handleJobSubmit)
+
 }
