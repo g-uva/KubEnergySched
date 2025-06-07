@@ -235,6 +235,9 @@ func (c RemoteCluster) SubmitJob(w Workload) error {
 	}
 
 	resp, err := http.Post(c.URL+"/submit", "application/json", bytes.NewReader(jsonData))
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -245,6 +248,7 @@ func (c RemoteCluster) SubmitJob(w Workload) error {
 		c.Name, w.ID, w.CPURequirement, w.EnergyPriority)
 	return nil
 }
+
 
 func (c RemoteCluster) CarbonIntensity() float64 {
 	// Placeholder — could scrape a real metric
