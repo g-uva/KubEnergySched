@@ -15,7 +15,8 @@ import (
 
 type RemoteCluster struct {
 	NameKey string `json:"name"`
-	URL  string `json:"url"`
+	MetricsURL  string `json:"metrics_url"`
+	SubmitURL string `json:"submit_url"`
 }
 
 type Workload struct {
@@ -210,12 +211,16 @@ func LoadClustersFromFile(path string) ([]RemoteCluster, error) {
 func (c RemoteCluster) Name() string { return c.NameKey }
 
 func (c RemoteCluster) CanAccept(w Workload) bool {
+	fmt.Printf("[RemoteCluster %s] Sending POST to %s/metrics...\n", c.Name(), c.MetricsURL)
 	cpu, err := c.GetMetricValue("compute_node_cpu_usage")
 	if err != nil {
+		fmt.Printf("[RemoteCluster %s] Error fetching CPU usage: %v\n", c.Name(), err)
 		return false
 	}
 	// Assume node can accept job if CPU is below a threshold
-	return cpu < 90.0
+	fmt.Printf("[RemoteCluster %s] Current CPU usage: %.2f%%\n", c.Name(), cpu)
+	// return cpu < 90.0
+	return true // TEMPORARY: for debugging
 }
 
 func (c RemoteCluster) EstimateEnergyCost(w Workload) float64 {
@@ -224,6 +229,7 @@ func (c RemoteCluster) EstimateEnergyCost(w Workload) float64 {
 }
 
 func (c RemoteCluster) SubmitJob(w Workload) error {
+	fmt.Println("RemoteCluster.SubmitJob was called!")
 	payload := map[string]interface{}{
 		"id": w.ID,
 		"cpu": w.CPURequirement,
@@ -234,7 +240,8 @@ func (c RemoteCluster) SubmitJob(w Workload) error {
 		return err
 	}
 
-	resp, err := http.Post(c.URL+"/submit", "application/json", bytes.NewReader(jsonData))
+	fmt.Printf("[RemoteCluster %s] Sending POST to %s/submit...\n", c.Name(), c.SubmitURL)
+	resp, err := http.Post(c.SubmitURL+"/submit", "application/json", bytes.NewReader(jsonData))
 	if err != nil {
 		return err
 	}
@@ -245,7 +252,7 @@ func (c RemoteCluster) SubmitJob(w Workload) error {
 	}
 
 	fmt.Printf("[RemoteCluster %s] Job %s submitted (CPU: %d, Priority: %.2f)\n",
-		c.Name, w.ID, w.CPURequirement, w.EnergyPriority)
+		c.Name(), w.ID, w.CPURequirement, w.EnergyPriority)
 	return nil
 }
 
@@ -256,7 +263,7 @@ func (c RemoteCluster) CarbonIntensity() float64 {
 }
 
 func (c RemoteCluster) GetMetricValue(metricName string) (float64, error) {
-	resp, err := http.Get(c.URL + "/metrics")
+	resp, err := http.Get(c.MetricsURL + "/metrics")
 	if err != nil {
 		return 0, err
 	}
@@ -301,4 +308,9 @@ func main() {
 	}
 
 	unit.Dispatch(workloads)
+
+	// To prevent it from exiting
+	for {
+		time.Sleep(time.Hour)
+	}
 }

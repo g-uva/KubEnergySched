@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"net/http"
+	httpMetrics "net/http"
 	"os"
 	// "time"
 	"encoding/json"
@@ -57,11 +57,11 @@ type JobRequest struct {
 	EnergyPriority float64 `json:"priority"`
 }
 
-func handleJobSubmit(w http.ResponseWriter, r *http.Request) {
+func handleJobSubmit(w httpMetrics.ResponseWriter, r *httpMetrics.Request) {
 	var job JobRequest
 	err := json.NewDecoder(r.Body).Decode(&job)
 	if err != nil {
-		http.Error(w, "Invalid job format", http.StatusBadRequest)
+		httpMetrics.Error(w, "Invalid job format", httpMetrics.StatusBadRequest)
 		return
 	}
 
@@ -70,21 +70,28 @@ func handleJobSubmit(w http.ResponseWriter, r *http.Request) {
 	cpuUsage.Set(cpu)
 
 	fmt.Printf("Job submitted: %+v | CPU now %.2f%%\n", job, cpu)
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(httpMetrics.StatusOK)
 }
 
 func main() {
-	// go simulateJobs()
+	httpMetrics.Handle("/metrics", promhttp.Handler())
+	httpMetrics.HandleFunc("/submit", handleJobSubmit)
 
-	http.Handle("/metrics", promhttp.Handler())
-	port := "2112"
+	portMetrics := "2112"
 	if p := os.Getenv("PORT"); p != "" {
-		port = p
+		portMetrics = p
 	}
-	fmt.Printf("Serving metrics on :%s\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
 
-	http.Handle("/metrics", promhttp.Handler())
-	http.HandleFunc("/submit", handleJobSubmit)
+	portJob := "9999"
+	if p := os.Getenv("JOB_PORT"); p != "" {
+		portJob = p
+	}
 
+	go func() {
+		fmt.Printf("Serving metrics on :%s\n", portMetrics)
+		log.Fatal(httpMetrics.ListenAndServe(":"+portMetrics, nil))
+	}()
+
+	fmt.Printf("Serving job submission on :%s\n", portJob)
+	log.Fatal(httpMetrics.ListenAndServe(":"+portJob, nil))
 }

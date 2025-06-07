@@ -9,7 +9,8 @@ data:
     {{- range $i, $ := until $replicas }}
       {
         "name": "compute-{{ $i }}",
-        "url": "http://compute-{{ $i }}.compute:2112"
+        "metrics_url": "http://compute-{{ $i }}.compute.eu-central.svc.cluster.local:2112",
+        "submit_url": "http://compute-{{ $i }}.compute.eu-central.svc.cluster.local:9999"
       }{{ if ne (add1 $i) $replicas }},{{ end }}
     {{- end }}
     ]

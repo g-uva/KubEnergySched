@@ -12,6 +12,20 @@ spec:
       labels:
         app: centralunit
     spec:
+      initContainers:
+        - name: wait-for-computes
+          image: busybox:1.36
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for compute-0, compute-1, compute-2..."
+              until nc -z compute-0.compute 2112 && \
+                    nc -z compute-1.compute 2112 && \
+                    nc -z compute-2.compute 2112; do
+                echo "Waiting..."
+                sleep 2
+              done
       containers:
         - name: centralunit
           image: "goncaloferreirauva/centralunit:latest"
