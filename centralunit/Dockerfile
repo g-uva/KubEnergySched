@@ -6,8 +6,8 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY ./centralunit .
-RUN go build -o centralunit centralunit.go && chmod +x centralunit
+COPY . ./
+RUN go build -o centralunit ./centralunit/centralunit.go && chmod +x centralunit
 
 # For debugging
 FROM alpine:3.22

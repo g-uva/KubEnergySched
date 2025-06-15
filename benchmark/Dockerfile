@@ -6,13 +6,12 @@ RUN go mod download
 
 COPY . ./
 # RUN go get benchmark.go
-RUN go build -o benchmark .
-# && chmod +x benchmark
+RUN go build -o benchmark_bin ./benchmark/benchmark.go && chmod +x benchmark_bin
 
 # For debugging
 FROM alpine:3.22
 # For production
 # FROM gcr.io/distroless/base-debian11
-COPY --from=builder /scheduler/benchmark /benchmark
+COPY --from=builder /scheduler/benchmark_bin /benchmark
 ENTRYPOINT ["/benchmark"]
 

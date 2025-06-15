@@ -4,5 +4,5 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd $SCRIPT_DIR/..
 
-cd $SCRIPT_DIR/manifest/ # navigate to the root directory
-helm upgrade eu-cluster . -n eu-central
+cd $SCRIPT_DIR/manifest/
+helm install eu-cluster . -n eu-central
