@@ -1,14 +1,17 @@
 package main
 
 import (
+	"encoding/json"
+	"net/http"
+	"bytes"
 	"kube-scheduler/pkg/core"
-	benchmark "kube-scheduler/benchmark/components"
+	benchComponents "kube-scheduler/benchmark/components"
 )
 
 func main() {
 	clusters, _ := core.LoadClustersFromFile("/config/clusters.json")
 
-	ba := benchmark.BenchmarkAdapter{
+	ba := benchComponents.BenchmarkAdapter{
 		Clusters:   toClusterInterface(clusters),
 		Strategies: []core.SchedulingStrategy{
 			&core.RoundRobin{},
@@ -16,7 +19,7 @@ func main() {
 			&core.MaxMin{},
 			&core.EnergyAwareStrategy{},
 		},
-		Workloads: benchmark.GenerateSyntheticWorkloads(50),
+		Workloads: benchComponents.GenerateSyntheticWorkloads(50),
 	}
 
 	ba.RunBenchmark()
@@ -29,4 +32,15 @@ func toClusterInterface(rc []core.RemoteCluster) []core.Cluster {
 		result = append(result, c)
 	}
 	return result
+}
+
+func SubmitToCentralUnit(w core.Workload) error {
+	url := "http://centralunit.eu-central.svc.cluster.local:8080/ingest"
+	body, _ := json.Marshal(w)
+	resp, err := http.Post(url, "application/json", bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	return nil
 }

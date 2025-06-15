@@ -4,8 +4,10 @@ WORKDIR /scheduler
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY ./benchmark .
-RUN go build -o benchmark benchmark.go && chmod +x benchmark
+COPY . ./
+# RUN go get benchmark.go
+RUN go build -o benchmark .
+# && chmod +x benchmark
 
 # For debugging
 FROM alpine:3.22

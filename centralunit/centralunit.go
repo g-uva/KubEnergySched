@@ -1,11 +1,26 @@
 package main
 
 import (
+	"encoding/json"
+	"net/http"
 	"fmt"
-	"time"
+	"log"
+	"os"
 	"kube-scheduler/pkg/core"
 )
 
+var unit core.CentralUnit
+
+func handleWorkloadIngest(w http.ResponseWriter, r *http.Request) {
+	var job core.Workload
+	if err := json.NewDecoder(r.Body).Decode(&job); err != nil {
+		http.Error(w, "invalid job format", http.StatusBadRequest)
+		return
+	}
+	go unit.Dispatch([]core.Workload{job})
+	w.WriteHeader(http.StatusOK)
+	fmt.Printf("[CentralUnit] Ingested job: %s\n", job.ID)
+}
 
 func main() {
 	fmt.Println("Loading clusters from file...")
@@ -16,26 +31,21 @@ func main() {
 	}
 	fmt.Printf("Loaded %d clusters from file\n", len(clustersRaw))
 
-	// Wrap into []core.Cluster interface
 	var clusters []core.Cluster
 	for _, rc := range clustersRaw {
 		clusters = append(clusters, rc)
 	}
 
-	unit := core.CentralUnit{
+	unit = core.CentralUnit{
 		Clusters: clusters,
 		Strategy: &core.RoundRobin{},
 	}
 
-	workloads := []core.Workload{
-		{ID: "job1", CPURequirement: 4, EnergyPriority: 0.7},
-		{ID: "job2", CPURequirement: 2, EnergyPriority: 0.4},
+	http.HandleFunc("/ingest", handleWorkloadIngest)
+	port := "8080"
+	if p := os.Getenv("CENTRAL_PORT"); p != "" {
+		port = p
 	}
-
-	unit.Dispatch(workloads)
-
-	// To prevent it from exiting
-	for {
-		time.Sleep(time.Hour)
-	}
+	fmt.Printf("CentralUnit API listening on :%s\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }

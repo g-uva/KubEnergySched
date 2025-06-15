@@ -37,8 +37,8 @@ func (c RemoteCluster) EstimateEnergyCost(w Workload) float64 {
 }
 
 func (c RemoteCluster) SubmitJob(w Workload) error {
-	fmt.Println("RemoteCluster.SubmitJob was called!")
-	payload := map[string]interface{}{
+	fmt.Println("RemoteCluster.SubmitJob was called. Workload ID:", w.ID)
+	payload := map[string]any{
 		"id": w.ID,
 		"cpu": w.CPURequirement,
 		"priority": w.EnergyPriority,

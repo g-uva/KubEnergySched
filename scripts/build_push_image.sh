@@ -8,6 +8,10 @@ cd $SCRIPT_DIR/..
 docker build -f ./centralunit/Dockerfile -t goncaloferreirauva/centralunit .
 docker push goncaloferreirauva/centralunit:latest
 
-# # Compute node
+# Compute node
 docker build -f ./computenode/Dockerfile -t goncaloferreirauva/computenode .
 docker push goncaloferreirauva/computenode:latest
+
+# Benchmark
+docker build -f ./benchmark/Dockerfile -t goncaloferreirauva/benchmark .
+docker push goncaloferreirauva/benchmark:latest
