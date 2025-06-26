@@ -38,19 +38,6 @@ func init() {
 	prometheus.MustRegister(cpuUsage)
 }
 
-// func simulateJobs() {
-// 	for {
-// 		sleep := time.Duration(rand.Intn(7)+3) * time.Second
-// 		time.Sleep(sleep)
-
-// 		jobCount.Inc()
-// 		cpu := 30 + rand.Float64()*60 // 30% to 90%
-// 		cpuUsage.Set(cpu)
-
-// 		fmt.Printf("Executed fake job, CPU: %.2f%%\n", cpu)
-// 	}
-// }
-
 type JobRequest struct {
 	ID             string  `json:"id"`
 	CPURequirement int     `json:"cpu"`

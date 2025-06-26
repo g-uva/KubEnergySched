@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"kube-scheduler/pkg/core"
+	"time"
 )
 
 var unit core.CentralUnit
@@ -17,9 +18,13 @@ func handleWorkloadIngest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid job format", http.StatusBadRequest)
 		return
 	}
-	go unit.Dispatch([]core.Workload{job})
+	// go unit.Dispatch([]core.Workload{job})
+	go unit.DispatchAll([]core.Workload{job})
 	w.WriteHeader(http.StatusOK)
 	fmt.Printf("[CentralUnit] Ingested job: %s\n", job.ID)
+
+	time.Sleep(3 * time.Second)
+	core.PrintDecisionTable()
 }
 
 func main() {
@@ -38,7 +43,8 @@ func main() {
 
 	unit = core.CentralUnit{
 		Clusters: clusters,
-		Strategy: &core.RoundRobin{},
+		// Strategy: &core.RoundRobin{},
+		Strategy: &core.CIawareStrategy{},
 	}
 
 	http.HandleFunc("/ingest", handleWorkloadIngest)
