@@ -13,6 +13,9 @@ RUN ls -l /app/centralunit
 
 # For debugging
 FROM alpine:3.22
+
+RUN apk add --no-cache curl
+
 # For production
 # FROM gcr.io/distroless/base-debian11
 COPY --from=builder /app/centralunit-bin /centralunit-bin
