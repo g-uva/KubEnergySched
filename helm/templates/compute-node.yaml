@@ -4,7 +4,7 @@ metadata:
   name: compute
 spec:
   serviceName: compute
-  replicas: {{ .Values.replicaCount }}
+  replicas: 3
   selector:
     matchLabels:
       app: compute-node
@@ -15,14 +15,14 @@ spec:
     spec:
       containers:
         - name: compute
-          image: goncaloferreirauva/computenode:latest
+          image: "goncaloferreirauva/computenode:latest"
           env:
             - name: REGION
               value: "{{ .Values.region }}"
             - name: CLUSTER_NAME
               valueFrom:
                 fieldRef:
-                  fieldPath: metadata.name  # e.g., compute-0, compute-1
+                  fieldPath: metadata.name
             - name: CPU_CAPACITY
               value: "{{ .Values.cpuCapacity }}"
             - name: ENERGY_BIAS
@@ -32,3 +32,35 @@ spec:
           ports:
             - containerPort: 2112
               name: metrics
+          volumeMounts:
+            - name: powercap
+              mountPath: /sys/class/powercap
+            - name: proc
+              mountPath: /proc
+
+        - name: scaphandre
+          image: hubblo/scaphandre:latest
+          securityContext:
+            privileged: true
+          args:
+            - prometheus
+            - "--bind"
+            - "0.0.0.0:8080"
+          ports:
+            - containerPort: 8080
+              name: scaphandre-metrics
+          volumeMounts:
+            - name: powercap
+              mountPath: /sys/class/powercap
+            - name: proc
+              mountPath: /proc
+
+      volumes:
+        - name: powercap
+          hostPath:
+            path: /sys/class/powercap
+            type: Directory
+        - name: proc
+          hostPath:
+            path: /proc
+            type: Directory
