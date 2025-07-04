@@ -7,7 +7,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . ./
-RUN go build -o centralunit-bin ./centralunit/centralunit.go && chmod +x centralunit-bin
+RUN GOOS=linux GOARCH=amd64 go build -o centralunit-bin ./centralunit/centralunit.go && chmod +x centralunit-bin
 
 RUN ls -l /app/centralunit
 

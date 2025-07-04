@@ -6,7 +6,7 @@ RUN go mod download
 
 COPY . ./
 # RUN go get benchmark.go
-RUN go build -o benchmark_bin ./benchmark/benchmark.go && chmod +x benchmark_bin
+RUN GOOS=linux GOARCH=amd64 go build -o benchmark_bin ./benchmark/benchmark.go && chmod +x benchmark_bin
 
 # For debugging
 FROM alpine:3.22

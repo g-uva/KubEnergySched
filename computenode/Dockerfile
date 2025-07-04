@@ -7,7 +7,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY ./computenode .
-RUN go build -o computenode computenode.go && chmod +x computenode
+RUN GOOS=linux GOARCH=amd64 go build -o computenode computenode.go && chmod +x computenode
 
 # For debugging
 FROM alpine:3.22

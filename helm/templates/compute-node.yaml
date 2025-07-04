@@ -33,34 +33,36 @@ spec:
             - containerPort: 2112
               name: metrics
           volumeMounts:
-            - name: powercap
-              mountPath: /sys/class/powercap
             - name: proc
               mountPath: /proc
-
+            - name: containerd-sock
+              mountPath: /run/containerd/containerd.sock
+              readOnly: true
         - name: scaphandre
           image: hubblo/scaphandre:latest
           securityContext:
             privileged: true
           args:
             - prometheus
-            - "--bind"
-            - "0.0.0.0:8080"
+            - "--address=0.0.0.0"
+            - "--port=8080"
+            - "--containers"
           ports:
-            - containerPort: 8080
-              name: scaphandre-metrics
+            - name: rawmetrics
+              containerPort: 8080
           volumeMounts:
-            - name: powercap
-              mountPath: /sys/class/powercap
             - name: proc
               mountPath: /proc
+            - name: containerd-sock
+              mountPath: /run/containerd/containerd.sock
+              readOnly: true
 
       volumes:
-        - name: powercap
-          hostPath:
-            path: /sys/class/powercap
-            type: Directory
         - name: proc
           hostPath:
             path: /proc
             type: Directory
+        - name: containerd-sock
+          hostPath:
+            path: /run/containerd/containerd.sock
+            type: Socket
