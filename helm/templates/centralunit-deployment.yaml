@@ -46,7 +46,12 @@ spec:
             - name: config
               mountPath: /config
               readOnly: true
+            - name: datavolume
+              mountPath: /data
       volumes:
         - name: config
           configMap:
             name: centralunit-config
+        - name: datavolume
+          persistentVolumeClaim:
+            claimName: centralunit-pvc

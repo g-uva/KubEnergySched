@@ -13,3 +13,7 @@ centralUnitImage: "goncaloferreirauva/centralunit:latest"
 # Config for Benchmark module
 benchmarkImage: "goncaloferreirauva/benchmark:latest"
 centralunitURL: "http://centralunit.eu-central.svc.cluster.local:8080"
+
+# For the persistent volume claim to save the metrics (and other things).
+# persistence:
+#   existingClaim: centralunit-pvc

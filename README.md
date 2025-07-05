@@ -1,5 +1,5 @@
-### KubeEnergyScheduler
-KubeEnergyScheduler *aims* to be a platform-agnostic plugin that seamlessly integrates *heterogenous* cloud infrastructures with **sustainability** in mind.
+### 🔋 KubEnergy
+KubeEnergyScheduler *aims* to be a platform-agnostic plugin that seamlessly integrates *heterogenous* cloud infrastructures optimising **sustainability**.
 
 - **Fully-managed**: the user (developer/researcher) does not have to worry about the underlying computation and resource allocation.
 - **Kubernetes-based**: Kubernetes is the *de facto* cluster framework used at the core of many cloud infrastructures.

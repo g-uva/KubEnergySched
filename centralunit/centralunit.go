@@ -30,7 +30,23 @@ func handleWorkloadIngest(w http.ResponseWriter, r *http.Request) {
 
 func handleMetricsIngest(w http.ResponseWriter, r *http.Request) {
 	log.Println("[CentralUnit] /metrics-ingest hit")
+	
 	data, _ := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read body.", http.StatusInternalServerError)
+		return
+	}
+
+	timestamp := time.Now().format("2006-01-02_15-04-05")
+	filepath := fmt.Sprintf("/data/metrics_%s.csv", timestamp)
+
+	err = os.WriteFile(filepath, data, 0644)
+	if err != nil {
+		log.Printf("Failed to write %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	log.Printf("[Central Unit] Received metrics:\n%s", string(data))
 	w.WriteHeader(http.StatusOK)
 }
