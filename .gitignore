@@ -2,3 +2,4 @@ results/
 .env
 .DS_Store
 config/
+csv_exports/
