@@ -8,6 +8,7 @@ import (
 	"os"
 	"kube-scheduler/pkg/core"
 	"time"
+	"io"
 )
 
 var unit core.CentralUnit
@@ -25,6 +26,13 @@ func handleWorkloadIngest(w http.ResponseWriter, r *http.Request) {
 
 	time.Sleep(3 * time.Second)
 	core.PrintDecisionTable()
+}
+
+func handleMetricsIngest(w http.ResponseWriter, r *http.Request) {
+	log.Println("[CentralUnit] /metrics-ingest hit")
+	data, _ := io.ReadAll(r.Body)
+	log.Printf("[Central Unit] Received metrics:\n%s", string(data))
+	w.WriteHeader(http.StatusOK)
 }
 
 func main() {
@@ -48,6 +56,7 @@ func main() {
 	}
 
 	http.HandleFunc("/ingest", handleWorkloadIngest)
+	http.HandleFunc("/metrics-ingest", handleMetricsIngest)
 	port := "8080"
 	if p := os.Getenv("CENTRAL_PORT"); p != "" {
 		port = p

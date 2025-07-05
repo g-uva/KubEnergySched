@@ -6,8 +6,9 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	// "time"
+	"bytes"
 	"encoding/json"
+	"io"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -57,9 +58,30 @@ func handleJobSubmit(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func handleForwardMetrics(w http.ResponseWriter, r *http.Request) {
+	resp, err := http.Get("http://localhost:8080/metrics")
+	if err != nil {
+		http.Error(w, "Failed to get Scaphandre metrics.", 500)
+		return
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+
+	httpResponse, httpError := http.Post("http://centralunit.eu-central.svc.cluster.local:8080/metrics-ingest", "text/plain", bytes.NewReader(body))
+	if httpError != nil {
+		log.Printf("Error sending metrics: %v\n", httpError)
+	} else {
+		log.Printf("POST response status: %v\n", httpResponse.Status)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Println("[ComputeNode] Submitted metrics to CentralUnit.")
+}
+
 func main() {
 	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/submit", handleJobSubmit)
+	http.HandleFunc("/forward-metrics", handleForwardMetrics)
 
 	portMetrics := "2112"
 	if p := os.Getenv("PORT"); p != "" {
@@ -69,6 +91,11 @@ func main() {
 	portJob := "9999"
 	if p := os.Getenv("JOB_PORT"); p != "" {
 		portJob = p
+	}
+
+	portForwardMetrics := "8080"
+	if p := os.Getenv("FORWARD_METRICS_PORT"); p != "" {
+		portForwardMetrics = p
 	}
 
 	go func() {
