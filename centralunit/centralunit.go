@@ -12,6 +12,7 @@ import (
 	"encoding/csv"
 	"strings"
 	"sort"
+	"regexp"
 )
 
 var unit core.CentralUnit
@@ -31,6 +32,18 @@ func handleWorkloadIngest(w http.ResponseWriter, r *http.Request) {
 	core.PrintDecisionTable()
 }
 
+func parseLabels(labelStr string) map[string]string {
+	result := make(map[string]string)
+	re := regexp.MustCompile(`(\w+?)="(.*?)"`)
+	matches := re.FindAllStringSubmatch(labelStr, -1)
+	for _, match := range matches {
+		if len(match) == 3 {
+			result[match[1]] = match[2]
+		}
+	}
+	return result
+}
+
 func handleMetricsIngest(w http.ResponseWriter, r *http.Request) {
 	log.Println("[CentralUnit] /metrics-ingest hit")
 
@@ -44,16 +57,18 @@ func handleMetricsIngest(w http.ResponseWriter, r *http.Request) {
 	timestamp := time.Now().Format(time.RFC3339)
 
 	metricMap := make(map[string]string)
-
 	for _, line := range lines {
 		if strings.HasPrefix(line, "#") || line == "" || !strings.HasPrefix(line, "scaph_") {
 			continue
 		}
+
 		parts := strings.Fields(line)
 		if len(parts) < 2 {
 			continue
 		}
-		metricMap[parts[0]] = parts[1]
+
+		key := flattenMetricKey(parts[0])
+		metricMap[key] = parts[1]
 	}
 
 	if len(metricMap) == 0 {
@@ -83,17 +98,17 @@ func handleMetricsIngest(w http.ResponseWriter, r *http.Request) {
 
 	reader := csv.NewReader(file)
 	var headers []string
-	existingRows := [][]string{}
+	var existingRows [][]string
 
 	if fileExists {
 		file.Seek(0, 0)
 		existingRows, _ = reader.ReadAll()
 		if len(existingRows) > 0 {
-			headers = existingRows[0][1:] // remove "timestamp"
+			headers = existingRows[0][1:] // skip "timestamp"
 		}
 	}
 
-	// Union: existing headers + new ones (in order)
+	// Merge new keys
 	headerSet := map[string]bool{}
 	for _, h := range headers {
 		headerSet[h] = true
@@ -106,7 +121,7 @@ func handleMetricsIngest(w http.ResponseWriter, r *http.Request) {
 	}
 	sort.Strings(headers)
 
-	// Rewrite file
+	// Rewind + rewrite CSV
 	file.Truncate(0)
 	file.Seek(0, 0)
 	writer := csv.NewWriter(file)
@@ -116,10 +131,8 @@ func handleMetricsIngest(w http.ResponseWriter, r *http.Request) {
 
 	for i := 1; i < len(existingRows); i++ {
 		rowMap := make(map[string]string)
-		for j := 1; j < len(existingRows[i]); j++ {
-			if j < len(existingRows[0]) {
-				rowMap[existingRows[0][j]] = existingRows[i][j]
-			}
+		for j := 1; j < len(existingRows[i]) && j < len(existingRows[0]); j++ {
+			rowMap[existingRows[0][j]] = existingRows[i][j]
 		}
 		row := []string{existingRows[i][0]}
 		for _, h := range headers {
@@ -137,6 +150,20 @@ func handleMetricsIngest(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[CentralUnit] Saved metrics at %s", timestamp)
 	w.WriteHeader(http.StatusOK)
 }
+
+func flattenMetricKey(full string) string {
+	name := full
+	if idx := strings.Index(full, "{"); idx != -1 {
+		labels := strings.TrimSuffix(strings.TrimPrefix(full[idx:], "{"), "}")
+		name = full[:idx]
+		labelMap := parseLabels(labels)
+		exe := strings.ReplaceAll(labelMap["exe"], ",", "")
+		pid := labelMap["pid"]
+		return fmt.Sprintf("%s__%s__%s", name, exe, pid)
+	}
+	return name
+}
+
 
 func main() {
 	fmt.Println("Loading clusters from file...")
