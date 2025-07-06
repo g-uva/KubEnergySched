@@ -8,5 +8,3 @@ kubectl delete podmonitor compute-scaphandre -n eu-central
 kubectl delete pv external-pv
 helm uninstall eu-cluster -n eu-central
 helm uninstall eu-monitoring -n eu-central
-
-echo "eu-cluster removed successfully :)"

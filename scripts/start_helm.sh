@@ -4,6 +4,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd $SCRIPT_DIR/../helm/
 kubectl apply -f ../helm/manual_config/external-pv.yaml
 kubectl apply -f ../helm/manual_config/podmonitor-compute.yaml
+kubectl apply -f ../helm/manual_config/scaph-nginx-configmap.yaml
 helm install eu-cluster . -n eu-central --create-namespace
 helm install eu-monitoring prometheus-community/kube-prometheus-stack \
   -n eu-central -f ../helm/prometheus/values.yaml

@@ -13,7 +13,7 @@ spec:
     matchNames:
       - eu-central
   podMetricsEndpoints:
-    - port: rawmetrics
+    - port: metrics
       path: /metrics
       interval: 15s
       scheme: http

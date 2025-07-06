@@ -56,6 +56,14 @@ spec:
             - name: containerd-sock
               mountPath: /run/containerd/containerd.sock
               readOnly: true
+        - name: scaphandre-proxy
+          image: nginx:stable-alpine
+          ports:
+            - name: metrics
+              containerPort: 8081
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
 
       volumes:
         - name: proc
@@ -66,3 +74,6 @@ spec:
           hostPath:
             path: /run/containerd/containerd.sock
             type: Socket
+        - name: nginx-config
+          configMap:
+            name: scaphandre-nginx-config
