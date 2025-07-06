@@ -93,11 +93,6 @@ func main() {
 		portJob = p
 	}
 
-	portForwardMetrics := "8080"
-	if p := os.Getenv("FORWARD_METRICS_PORT"); p != "" {
-		portForwardMetrics = p
-	}
-
 	go func() {
 		fmt.Printf("Serving metrics on :%s\n", portMetrics)
 		log.Fatal(http.ListenAndServe(":"+portMetrics, nil))
