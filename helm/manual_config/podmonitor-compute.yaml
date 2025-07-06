@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: compute-scaphandre
+  namespace: eu-central
+  labels:
+    release: eu-cluster
+spec:
+  selector:
+    matchLabels:
+      app: compute-node
+  namespaceSelector:
+    matchNames:
+      - eu-central
+  podMetricsEndpoints:
+    - port: rawmetrics
+      path: /metrics
+      interval: 15s
+      scheme: http

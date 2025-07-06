@@ -20,9 +20,7 @@ spec:
             - -c
             - |
               echo "Waiting for compute-0, compute-1, compute-2..."
-              until nc -z compute-0.compute 2112 && \
-                    nc -z compute-1.compute 2112 && \
-                    nc -z compute-2.compute 2112; do
+              until nc -z compute-0.compute 2112; do
                 echo "Waiting..."
                 sleep 2
               done
