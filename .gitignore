@@ -3,3 +3,4 @@ results/
 .DS_Store
 config/
 csv_exports/
+powertrace/key.json

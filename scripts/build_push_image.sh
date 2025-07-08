@@ -15,3 +15,7 @@ docker push goncaloferreirauva/centralunit:latest
 # # Benchmark
 # docker build -f ./benchmark/Dockerfile -t goncaloferreirauva/benchmark .
 # docker push goncaloferreirauva/benchmark:latest
+
+# Powertrace
+docker build -f ./powertrace/Dockerfile -t goncaloferreirauva/powertrace .
+docker push goncaloferreirauva/powetrace:latest
