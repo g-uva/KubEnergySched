@@ -278,9 +278,10 @@ func main() {
 		Strategy: &core.CIawareStrategy{},
 	}
 
-	http.HandleFunc("/ingest", handleWorkloadIngest)
+	http.HandleFunc("/workload-ingest", handleWorkloadIngest)
 	http.HandleFunc("/metrics-ingest", handleMetricsIngest)
 	http.HandleFunc("/metrics-export-range", handleExportMetricsRange)
+
 	port := "8080"
 	if p := os.Getenv("CENTRAL_PORT"); p != "" {
 		port = p

@@ -35,7 +35,7 @@ func toClusterInterface(rc []core.RemoteCluster) []core.Cluster {
 }
 
 func SubmitToCentralUnit(w core.Workload) error {
-	url := "http://centralunit.eu-central.svc.cluster.local:8080/ingest"
+	url := "http://centralunit.eu-central.svc.cluster.local:8080/workload-ingest"
 	body, _ := json.Marshal(w)
 	resp, err := http.Post(url, "application/json", bytes.NewReader(body))
 	if err != nil {

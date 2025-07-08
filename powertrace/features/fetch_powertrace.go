@@ -1,26 +1,26 @@
-package trace_features
+package features
 
 import (
-	"context"
+	// "context"
 	"fmt"
-	"log"
-	powertrace "kube-scheduler/powertrace"
+	// "log"
+	// powertrace "kube-scheduler/powertrace"
 )
 
-func main() {
-	ctx := context.Background()
+func TraceGoogleWorkload() {
+	// ctx := context.Background()
 
-	traces, err := powertrace.DownloadAndParse(ctx, "powerdata_2019", "cella_pdu6.csv.gz")
-	if err != nil {
-		log.Fatal(err)
-	}
+	// traces, err := powertrace.DownloadAndParse(ctx, "powerdata_2019", "cella_pdu6.csv.gz")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	fmt.Printf("Parsed %d records\n", len(traces))
+	// fmt.Printf("Parsed %d records\n", len(traces))
 
-	// Save output to /data/powertrace.csv
-	if err := powertrace.SaveToCSV(traces, "data/powertrace.csv"); err != nil {
-		log.Fatal(err)
-	}
+	// // Save output to /data/powertrace.csv
+	// if err := powertrace.SaveToCSV(traces, "data/powertrace.csv"); err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	fmt.Println("Saved to data/powertrace.csv")
 }

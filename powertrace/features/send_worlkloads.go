@@ -1,6 +1,8 @@
-package trace_features
+package features
 
 import (
+    "bytes"
+    "context"
     "encoding/csv"
     "encoding/json"
     "fmt"
@@ -19,17 +21,18 @@ type Workload struct {
     Memory     float64       `json:"memory"`
 }
 
-func main() {
-    file, err := os.Open("data/powertrace.csv")
+// Entry point for main
+func ScheduleFromCSV(ctx context.Context, csvPath string) error {
+    file, err := os.Open(csvPath)
     if err != nil {
-        log.Fatalf("Failed to open CSV: %v", err)
+        return fmt.Errorf("open CSV: %w", err)
     }
     defer file.Close()
 
     reader := csv.NewReader(file)
     rows, err := reader.ReadAll()
     if err != nil {
-        log.Fatalf("Failed to read CSV: %v", err)
+        return fmt.Errorf("read CSV: %w", err)
     }
 
     startTime := time.Now()
@@ -45,6 +48,7 @@ func main() {
 
         offset := time.Duration(timeVal) * time.Microsecond
         submit := startTime.Add(offset)
+
         cpu := productionPower * 4.0
         mem := productionPower * 8192.0
 
@@ -57,33 +61,33 @@ func main() {
         })
     }
 
-    scheduleAndSend(workloads)
+    return scheduleAndSend(workloads)
 }
 
-func scheduleAndSend(workloads []Workload) {
+// Internal function to send all workloads to CentralUnit
+func scheduleAndSend(workloads []Workload) error {
     for _, w := range workloads {
-        // Optionally add a planning step here
         planned := planSchedule(w)
 
         body, err := json.Marshal(planned)
         if err != nil {
-            log.Printf("Failed to encode workload %s: %v", w.ID, err)
+            log.Printf("JSON error for %s: %v", w.ID, err)
             continue
         }
 
-        resp, err := http.Post("http://centralunit.eu-central.svc.cluster.local:8080/handleWorkloadIngest", "application/json", bytes.NewReader(body))
+        resp, err := http.Post("http://centralunit:8080/workload-ingest", "application/json", bytes.NewReader(body))
         if err != nil {
-            log.Printf("Failed to POST workload %s: %v", w.ID, err)
+            log.Printf("POST error for %s: %v", w.ID, err)
             continue
         }
         resp.Body.Close()
 
-        log.Printf("Sent workload %s", w.ID)
+        log.Printf("Scheduled workload %s", w.ID)
     }
+    return nil
 }
 
-// PlanSchedule is a placeholder for your strategy
+// Optional: add scheduling logic
 func planSchedule(w Workload) Workload {
-    // In a real planner, you might offset start times, group loads, etc.
     return w
 }

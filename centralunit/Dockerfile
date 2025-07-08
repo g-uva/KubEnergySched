@@ -9,8 +9,6 @@ RUN go mod download
 COPY . ./
 RUN GOOS=linux GOARCH=amd64 go build -o centralunit-bin ./centralunit/centralunit.go && chmod +x centralunit-bin
 
-RUN ls -l /app/centralunit
-
 # For debugging
 FROM alpine:3.22
 

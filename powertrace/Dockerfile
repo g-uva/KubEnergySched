@@ -7,9 +7,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . ./
-RUN GOOS=linux GOARCH=amd64 go build -o powertrace-bin ./powertrace/powertrace.go && chmod +x powertrace-bin
-
-RUN ls -l /app/powertrace
+RUN GOOS=linux GOARCH=amd64 go build -o powertrace-bin ./powertrace && chmod +x powertrace-bin
 
 # For debugging
 FROM alpine:3.22
