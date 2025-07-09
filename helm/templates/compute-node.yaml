@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: compute
-          image: "goncaloferreirauva/computenode:latest"
+          image: "gd1.lab.uvalight.net/computenode:latest"
           env:
             - name: REGION
               value: "{{ .Values.region }}"

@@ -26,7 +26,7 @@ spec:
               done
       containers:
         - name: centralunit
-          image: "goncaloferreirauva/centralunit:latest"
+          image: "gd1.lab.uvalight.net/centralunit:latest"
           ports:
             - containerPort: 2112
           env:

@@ -21,7 +21,6 @@ type Workload struct {
     Memory     float64       `json:"memory"`
 }
 
-// Entry point for main
 func ScheduleFromCSV(ctx context.Context, csvPath string) error {
     file, err := os.Open(csvPath)
     if err != nil {

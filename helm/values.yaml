@@ -5,13 +5,13 @@ energyBias: "0.6"
 carbonIntensity: "100"
 workloadPattern: burst
 replicaCount: 3
-centralUnitImage: "goncaloferreirauva/centralunit:latest"
+centralUnitImage: "gd1.lab.uvalight.net/centralunit:latest"
 
-# computeNodeImage: "goncaloferreirauva/compute-node:latest"
+# computeNodeImage: "gd1.lab.uvalight.net/compute-node:latest"
 # computeNodeCount: 3
 
 # Config for Benchmark module
-benchmarkImage: "goncaloferreirauva/benchmark:latest"
+benchmarkImage: "gd1.lab.uvalight.net/benchmark:latest"
 centralunitURL: "http://centralunit.eu-central.svc.cluster.local:8080"
 
 # For the persistent volume claim to save the metrics (and other things).
