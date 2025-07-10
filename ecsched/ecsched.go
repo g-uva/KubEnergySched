@@ -29,85 +29,24 @@ type Workload struct {
 	Memory     float64
 }
 
-type Reservation struct {
-	Start  time.Time
-	End    time.Time
-	CPU    float64
-	Memory float64
-	JobID  string
-}
-
+// we no longer track CPU/Memory at all
 type SimulatedNode struct {
 	Name         string
-	Reservations []Reservation
+	Reservations []Event      // only used to find next‐free time
 }
 
-func (n *SimulatedNode) EarliestAvailable(w Workload, after time.Time) (time.Time, bool) {
-	log.Printf("[%s] → Checking availability for %s after %v", n.Name, w.ID, after)
-	log.Printf("[%s] → %d reservations", n.Name, len(n.Reservations))
-
-	checkTime := after.Truncate(time.Second)
-	limit := checkTime.Add(24 * time.Hour)
-
-	// If node has no jobs, return t+0
-	if len(n.Reservations) == 0 {
-		if n.canFit(w, checkTime) {
-			log.Printf("[%s] ✅ canFit immediately at submit time %v", n.Name, checkTime)
-			return checkTime, true
-		}
-	}
-
-	// Otherwise start checking from latest reservation end
-	latest := checkTime
-	for _, r := range n.Reservations {
-		if r.End.After(latest) {
-			latest = r.End
-		}
-	}
-	checkTime = latest
-
-	for checkTime.Before(limit) {
-		if n.canFit(w, checkTime) {
-			log.Printf("[%s] ✅ canFit at %v", n.Name, checkTime)
-			return checkTime, true
-		} else {
-			log.Printf("[%s] ❌ cannot fit at %v", n.Name, checkTime)
-		}
-		checkTime = checkTime.Add(5 * time.Second)
-	}
-	log.Printf("[%s] ❌ No fit for %s in time window", n.Name, w.ID)
-	return time.Time{}, false
-}
-
-func (n *SimulatedNode) canFit(w Workload, start time.Time) bool {
-	start = start.Truncate(time.Second)
-	end := start.Add(w.Duration).Truncate(time.Second)
-	var usedCPU, usedMem float64
-	log.Printf("[%s]   ↪ Reservation overlap check: job %s wants %v–%v", n.Name, w.ID, start, end)
-	recent := n.Reservations
-	if len(recent) > 10 {
-		recent = recent[len(recent)-10:]
-	}
-	for _, r := range recent {
-		log.Printf("[%s]     × Existing: %s from %v to %v", n.Name, r.JobID, r.Start, r.End)
-		if r.End.After(start) && r.Start.Before(end) {
-			usedCPU += r.CPU
-			usedMem += r.Memory
-		}
-	}
-	return (w.CPU <= 16.0 - usedCPU) && (w.Memory <= 32000.0 - usedMem)
-}
-
-func (n *SimulatedNode) Reserve(w Workload, start time.Time) {
-	start = start.Truncate(time.Second)
-	end := start.Add(w.Duration).Truncate(time.Second)
-	n.Reservations = append(n.Reservations, Reservation{
-		Start:  start,
-		End:    end,
-		CPU:    w.CPU,
-		Memory: w.Memory,
-		JobID:  w.ID,
+func (n *SimulatedNode) ReserveAt(w Workload, start time.Time) {
+	// record when this job will finish on this node
+	n.Reservations = append(n.Reservations, Event{
+		Time:     start.Add(w.Duration),
+		Type:     JobEnd,
+		Workload: w,
+		Node:     n,
 	})
+}
+
+func (n *SimulatedNode) Release(w Workload) {
+	// no resources to free
 }
 
 type DiscreteEventScheduler struct {
@@ -121,7 +60,8 @@ func NewScheduler(nodes []*SimulatedNode) *DiscreteEventScheduler {
 	return &DiscreteEventScheduler{
 		Clock:    time.Now(),
 		Nodes:    nodes,
-		Timeline: []Event{},
+		Timeline: nil,
+		Logs:     nil,
 	}
 }
 
@@ -146,66 +86,78 @@ func (s *DiscreteEventScheduler) Run() {
 		case JobArrival:
 			s.handleArrival(evt.Workload)
 		case JobEnd:
-			// Do nothing for now
+			evt.Node.Release(evt.Workload)
+			log.Printf("Ended %s at %v on %s", evt.Workload.ID, s.Clock, evt.Node.Name)
 		}
 	}
 }
 
 func (s *DiscreteEventScheduler) handleArrival(w Workload) {
-	type nodeOption struct {
+	log.Printf("→ Arrival %s at %v", w.ID, s.Clock)
+
+	type option struct {
 		node  *SimulatedNode
 		start time.Time
 	}
-	var options []nodeOption
+	var options []option
+
+	// 1) for each node, compute earliest start
 	for _, node := range s.Nodes {
-		start, ok := node.EarliestAvailable(w, w.SubmitTime)
-		if ok {
-			options = append(options, nodeOption{node: node, start: start})
+		var start time.Time
+		if len(node.Reservations) == 0 {
+			start = s.Clock
 		} else {
-			log.Printf("[ERROR] Job %s could not be scheduled on node %s", w.ID, node.Name)
+			// find the latest reservation end among this node's queue
+			latest := node.Reservations[0].Time
+			for _, r := range node.Reservations {
+				if r.Time.After(latest) {
+					latest = r.Time
+				}
+			}
+			start = latest
 		}
+		options = append(options, option{node: node, start: start})
+		log.Printf("  • candidate %s: next‐free at %v, #queued=%d",
+			node.Name, start, len(node.Reservations))
 	}
 
-	if len(options) == 0 {
-		log.Printf("[SKIPPED] Job %s: no node could schedule it", w.ID)
-		return
-	}
-
+	// 2) choose idle first, then earliest start, then name
 	log.Printf("→ Decision point: comparing candidate nodes for job %s", w.ID)
-	for _, opt := range options {
-		log.Printf("  • Node %s: start time %v, #reservations=%d", opt.node.Name, opt.start, len(opt.node.Reservations))
-	}
-
-	// sort.Slice(options, func(i, j int) bool {
-	// 	if options[i].start.Equal(options[j].start) {
-	// 		return options[i].node.Name < options[j].node.Name
-	// 	}
-	// 	return options[i].start.Before(options[j].start)
-	// })
-
 	sort.Slice(options, func(i, j int) bool {
+		idleI := len(options[i].node.Reservations) == 0
+		idleJ := len(options[j].node.Reservations) == 0
+		if idleI != idleJ {
+			return idleI // idle before non‐idle
+		}
 		if options[i].start.Equal(options[j].start) {
-			// Prefer node with fewer reservations (lower load)
-			return len(options[i].node.Reservations) < len(options[j].node.Reservations)
+			return options[i].node.Name < options[j].node.Name
 		}
 		return options[i].start.Before(options[j].start)
 	})
+	for _, opt := range options {
+		log.Printf("   • %s: start=%v, queued=%d",
+			opt.node.Name, opt.start, len(opt.node.Reservations))
+	}
 
-	chosen := options[0]
-	n := chosen.node
-	start := chosen.start.Truncate(time.Second)
-	end := start.Add(w.Duration).Truncate(time.Second)
+	// 3) schedule on the winner
+	winner := options[0]
+	winner.node.ReserveAt(w, winner.start)
 
-	n.Reserve(w, start)
-
+	// enqueue its end event
 	s.Timeline = append(s.Timeline, Event{
-		Time:     end,
+		Time:     winner.start.Add(w.Duration),
 		Type:     JobEnd,
 		Workload: w,
-		Node:     n,
+		Node:     winner.node,
 	})
 
-	entry := fmt.Sprintf("%s,%s,%v,%v,%v", w.ID, n.Name, w.SubmitTime.Format(time.RFC3339), start.Format(time.RFC3339), end.Format(time.RFC3339))
+	// record to Logs
+	entry := fmt.Sprintf("%s,%s,%v,%v,%v",
+		w.ID, winner.node.Name,
+		w.SubmitTime,
+		winner.start,
+		winner.start.Add(w.Duration),
+	)
 	s.Logs = append(s.Logs, entry)
-	log.Printf("Scheduled %s on %s at %v", w.ID, n.Name, start)
+	log.Printf("Scheduled %s on %s at %v", w.ID, winner.node.Name, winner.start)
 }
