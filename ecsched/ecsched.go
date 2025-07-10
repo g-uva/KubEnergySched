@@ -47,7 +47,25 @@ func (n *SimulatedNode) EarliestAvailable(w Workload, after time.Time) (time.Tim
 	log.Printf("[%s] → %d reservations", n.Name, len(n.Reservations))
 
 	checkTime := after.Truncate(time.Second)
-	limit := checkTime.Add(1 * time.Hour)
+	limit := checkTime.Add(24 * time.Hour)
+
+	// If node has no jobs, return t+0
+	if len(n.Reservations) == 0 {
+		if n.canFit(w, checkTime) {
+			log.Printf("[%s] ✅ canFit immediately at submit time %v", n.Name, checkTime)
+			return checkTime, true
+		}
+	}
+
+	// Otherwise start checking from latest reservation end
+	latest := checkTime
+	for _, r := range n.Reservations {
+		if r.End.After(latest) {
+			latest = r.End
+		}
+	}
+	checkTime = latest
+
 	for checkTime.Before(limit) {
 		if n.canFit(w, checkTime) {
 			log.Printf("[%s] ✅ canFit at %v", n.Name, checkTime)
@@ -59,16 +77,6 @@ func (n *SimulatedNode) EarliestAvailable(w Workload, after time.Time) (time.Tim
 	}
 	log.Printf("[%s] ❌ No fit for %s in time window", n.Name, w.ID)
 	return time.Time{}, false
-}
-
-func (n *SimulatedNode) NextFreeAt() time.Time {
-	var latest time.Time
-	for _, r := range n.Reservations {
-		if r.End.After(latest) {
-			latest = r.End
-		}
-	}
-	return latest.Truncate(time.Second)
 }
 
 func (n *SimulatedNode) canFit(w Workload, start time.Time) bool {
@@ -148,36 +156,37 @@ func (s *DiscreteEventScheduler) handleArrival(w Workload) {
 		node  *SimulatedNode
 		start time.Time
 	}
-	var immediate []nodeOption
-	var fallback []nodeOption
+	var options []nodeOption
 	for _, node := range s.Nodes {
 		start, ok := node.EarliestAvailable(w, w.SubmitTime)
-		log.Printf("[%s] EarliestAvailable for job %s: %v (ok=%v)", node.Name, w.ID, start, ok)
 		if ok {
-			log.Printf("[%s] → Added to immediate options", node.Name)
-			immediate = append(immediate, nodeOption{node: node, start: start})
+			options = append(options, nodeOption{node: node, start: start})
 		} else {
-			deferredStart := node.NextFreeAt()
-			log.Printf("[%s] → No immediate fit. NextFreeAt: %v", node.Name, deferredStart)
-			fallback = append(fallback, nodeOption{node: node, start: deferredStart})
+			log.Printf("[ERROR] Job %s could not be scheduled on node %s", w.ID, node.Name)
 		}
 	}
 
-	var options []nodeOption
-	if len(immediate) > 0 {
-		options = immediate
-	} else {
-		options = fallback
+	if len(options) == 0 {
+		log.Printf("[SKIPPED] Job %s: no node could schedule it", w.ID)
+		return
 	}
 
-	log.Printf("→ Final options for job %s:", w.ID)
+	log.Printf("→ Decision point: comparing candidate nodes for job %s", w.ID)
 	for _, opt := range options {
-		log.Printf("  - %s: start at %v", opt.node.Name, opt.start)
+		log.Printf("  • Node %s: start time %v, #reservations=%d", opt.node.Name, opt.start, len(opt.node.Reservations))
 	}
+
+	// sort.Slice(options, func(i, j int) bool {
+	// 	if options[i].start.Equal(options[j].start) {
+	// 		return options[i].node.Name < options[j].node.Name
+	// 	}
+	// 	return options[i].start.Before(options[j].start)
+	// })
 
 	sort.Slice(options, func(i, j int) bool {
 		if options[i].start.Equal(options[j].start) {
-			return options[i].node.Name < options[j].node.Name
+			// Prefer node with fewer reservations (lower load)
+			return len(options[i].node.Reservations) < len(options[j].node.Reservations)
 		}
 		return options[i].start.Before(options[j].start)
 	})
@@ -186,8 +195,6 @@ func (s *DiscreteEventScheduler) handleArrival(w Workload) {
 	n := chosen.node
 	start := chosen.start.Truncate(time.Second)
 	end := start.Add(w.Duration).Truncate(time.Second)
-
-	log.Printf("✔ Job %s assigned to %s at %v", w.ID, n.Name, start)
 
 	n.Reserve(w, start)
 
