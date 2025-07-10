@@ -40,3 +40,5 @@
 
 # kubectl exec -it -n eu-central deploy/centralunit -- curl http://localhost:8080/metrics-export-range
 # kubectl cp eu-central/centralunit-864794d4d-gl4nm:/data/full_scaphandre_metrics.csv csv_exports/full_scaphandre_metrics.csv
+
+# kubectl exec -it powertrace-798b59c4dd-h9cft -n eu-central -- curl -X POST http://localhost:5000/send-workloads

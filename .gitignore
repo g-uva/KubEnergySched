@@ -5,3 +5,4 @@ config/
 csv_exports/
 **/key.json
 **/powertrace.csv
+logs/
