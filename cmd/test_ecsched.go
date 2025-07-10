@@ -48,8 +48,8 @@ func loadWorkloads(path string) []ecsched.Workload {
 
 func main() {
 	nodes := []*ecsched.SimulatedNode{
-		{Name: "n1", AvailableCPU: 16.0, AvailableMemory: 32000},
-		{Name: "n2", AvailableCPU: 16.0, AvailableMemory: 32000},
+		{Name: "n1"},
+		{Name: "n2"},
 	}
 
 	sim := ecsched.NewScheduler(nodes)
@@ -58,6 +58,7 @@ func main() {
 	for _, w := range wls {
 		sim.AddWorkload(w)
 	}
+	
 	sim.Run()
 
 	out, _ := os.Create("ecsched/results/schedule_log.csv")
