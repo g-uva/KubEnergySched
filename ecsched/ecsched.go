@@ -43,50 +43,63 @@ type SimulatedNode struct {
 }
 
 func (n *SimulatedNode) EarliestAvailable(w Workload, after time.Time) (time.Time, bool) {
-	// Determine earliest time after 'after' when the node is free
-	checkTime := after
-	for _, r := range n.Reservations {
-		if r.End.After(checkTime) {
-			checkTime = r.End
-		}
-	}
+	log.Printf("[%s] → Checking availability for %s after %v", n.Name, w.ID, after)
+	log.Printf("[%s] → %d reservations", n.Name, len(n.Reservations))
 
-	limit := checkTime.Add(1 * time.Hour) // Search window
+	checkTime := after.Truncate(time.Second)
+	limit := checkTime.Add(1 * time.Hour)
 	for checkTime.Before(limit) {
 		if n.canFit(w, checkTime) {
-			log.Printf("[%s] Found slot for %s at %v", n.Name, w.ID, checkTime)
+			log.Printf("[%s] ✅ canFit at %v", n.Name, checkTime)
 			return checkTime, true
+		} else {
+			log.Printf("[%s] ❌ cannot fit at %v", n.Name, checkTime)
 		}
 		checkTime = checkTime.Add(5 * time.Second)
 	}
-	log.Printf("[%s] No slot found for %s in time window", n.Name, w.ID)
+	log.Printf("[%s] ❌ No fit for %s in time window", n.Name, w.ID)
 	return time.Time{}, false
 }
 
-func (n *SimulatedNode) canFit(w Workload, start time.Time) bool {
-	end := start.Add(w.Duration)
-	var usedCPU, usedMem float64
+func (n *SimulatedNode) NextFreeAt() time.Time {
+	var latest time.Time
 	for _, r := range n.Reservations {
+		if r.End.After(latest) {
+			latest = r.End
+		}
+	}
+	return latest.Truncate(time.Second)
+}
+
+func (n *SimulatedNode) canFit(w Workload, start time.Time) bool {
+	start = start.Truncate(time.Second)
+	end := start.Add(w.Duration).Truncate(time.Second)
+	var usedCPU, usedMem float64
+	log.Printf("[%s]   ↪ Reservation overlap check: job %s wants %v–%v", n.Name, w.ID, start, end)
+	recent := n.Reservations
+	if len(recent) > 10 {
+		recent = recent[len(recent)-10:]
+	}
+	for _, r := range recent {
+		log.Printf("[%s]     × Existing: %s from %v to %v", n.Name, r.JobID, r.Start, r.End)
 		if r.End.After(start) && r.Start.Before(end) {
 			usedCPU += r.CPU
 			usedMem += r.Memory
 		}
 	}
-	log.Printf("[%s] Checking canFit for %s at %v–%v | usedCPU=%.2f, usedMem=%.2f", n.Name, w.ID, start, end, usedCPU, usedMem)
-	log.Printf("[%s] has %d reservations", n.Name, len(n.Reservations))
-	return (usedCPU <= 16.0 - w.CPU) && (usedMem <= 32000.0 - w.Memory)
+	return (w.CPU <= 16.0 - usedCPU) && (w.Memory <= 32000.0 - usedMem)
 }
 
 func (n *SimulatedNode) Reserve(w Workload, start time.Time) {
+	start = start.Truncate(time.Second)
+	end := start.Add(w.Duration).Truncate(time.Second)
 	n.Reservations = append(n.Reservations, Reservation{
 		Start:  start,
-		End:    start.Add(w.Duration),
+		End:    end,
 		CPU:    w.CPU,
 		Memory: w.Memory,
 		JobID:  w.ID,
 	})
-	log.Printf("[%s] Reserving job %s: %v–%v (CPU=%.2f, MEM=%.2f)", n.Name, w.ID, start, start.Add(w.Duration), w.CPU, w.Memory)
-	log.Printf("[%s] Reservations count: %d", n.Name, len(n.Reservations))
 }
 
 type DiscreteEventScheduler struct {
@@ -125,7 +138,7 @@ func (s *DiscreteEventScheduler) Run() {
 		case JobArrival:
 			s.handleArrival(evt.Workload)
 		case JobEnd:
-			// log.Printf("Ended %s at %v on %s", evt.Workload.ID, s.Clock, evt.Node.Name)
+			// Do nothing for now
 		}
 	}
 }
@@ -135,15 +148,31 @@ func (s *DiscreteEventScheduler) handleArrival(w Workload) {
 		node  *SimulatedNode
 		start time.Time
 	}
-	var options []nodeOption
+	var immediate []nodeOption
+	var fallback []nodeOption
 	for _, node := range s.Nodes {
-		if start, ok := node.EarliestAvailable(w, w.SubmitTime); ok {
-			options = append(options, nodeOption{node: node, start: start})
+		start, ok := node.EarliestAvailable(w, w.SubmitTime)
+		log.Printf("[%s] EarliestAvailable for job %s: %v (ok=%v)", node.Name, w.ID, start, ok)
+		if ok {
+			log.Printf("[%s] → Added to immediate options", node.Name)
+			immediate = append(immediate, nodeOption{node: node, start: start})
+		} else {
+			deferredStart := node.NextFreeAt()
+			log.Printf("[%s] → No immediate fit. NextFreeAt: %v", node.Name, deferredStart)
+			fallback = append(fallback, nodeOption{node: node, start: deferredStart})
 		}
 	}
-	if len(options) == 0 {
-		log.Printf("Job %s could not be scheduled", w.ID)
-		return
+
+	var options []nodeOption
+	if len(immediate) > 0 {
+		options = immediate
+	} else {
+		options = fallback
+	}
+
+	log.Printf("→ Final options for job %s:", w.ID)
+	for _, opt := range options {
+		log.Printf("  - %s: start at %v", opt.node.Name, opt.start)
 	}
 
 	sort.Slice(options, func(i, j int) bool {
@@ -155,8 +184,10 @@ func (s *DiscreteEventScheduler) handleArrival(w Workload) {
 
 	chosen := options[0]
 	n := chosen.node
-	start := chosen.start
-	end := start.Add(w.Duration)
+	start := chosen.start.Truncate(time.Second)
+	end := start.Add(w.Duration).Truncate(time.Second)
+
+	log.Printf("✔ Job %s assigned to %s at %v", w.ID, n.Name, start)
 
 	n.Reserve(w, start)
 
