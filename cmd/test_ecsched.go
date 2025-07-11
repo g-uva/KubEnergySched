@@ -47,11 +47,17 @@ func loadWorkloads(path string) []ecsched.Workload {
 }
 
 func main() {
-	nodes := []*ecsched.SimulatedNode{
-		{Name: "n1"},
-		{Name: "n2"},
-	}
+	// nodes := []*ecsched.SimulatedNode{
+	// 	{Name: "n1"},
+	// 	{Name: "n2"},
+	// }
 
+
+	nodes := []*ecsched.Node {
+		ecsched.NewNode("n1", 16, 36_000),
+		ecsched.NewNode("n2", 16, 36_000),
+	}
+	
 	sim := ecsched.NewScheduler(nodes)
 	wls := loadWorkloads("powertrace/data/powertrace.csv")
 
