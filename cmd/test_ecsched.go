@@ -2,14 +2,12 @@ package main
 
 import (
 	"encoding/csv"
+	"fmt"
 	"kube-scheduler/ecsched"
 	"log"
 	"os"
 	"strconv"
 	"time"
-	"path/filepath"
-	"io"
-	"fmt"
 )
 
 func loadWorkloads(path string) []ecsched.Workload {
@@ -50,26 +48,15 @@ func loadWorkloads(path string) []ecsched.Workload {
 }
 
 func main() {
-	// Prepare results directory
-	ts := time.Now().Unix()
-	dir := fmt.Sprintf("results/%d_results", ts)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		log.Fatalf("Failed to create results dir: %v", err)
-	}
-
-	// Redirect logs to both stdout and run.log
-	logFilePath := filepath.Join(dir, "run.log")
-	lf, err := os.Create(logFilePath)
-	if err != nil {
-		log.Fatalf("Failed to create log file: %v", err)
-	}
-	defer lf.Close()
-	log.SetOutput(io.MultiWriter(os.Stdout, lf))
-
-	// Load nodes
-	nodes := []*ecsched.Node{
-		{Name: "n1", TotalCPU: 16.0, TotalMemory: 32000},
-		{Name: "n2", TotalCPU: 16.0, TotalMemory: 32000},
+	// Create 100 homogeneous nodes:
+	var nodes []*ecsched.Node
+	for i := 1; i <= 100; i++ {
+		name := fmt.Sprintf("n%d", i)
+		nodes = append(nodes, &ecsched.Node{
+			Name:            name,
+			AvailableCPU:    16.0,
+			AvailableMemory: 32768.0,
+		})
 	}
 
 	sim := ecsched.NewScheduler(nodes)
@@ -79,21 +66,39 @@ func main() {
 		sim.AddWorkload(w)
 	}
 
+	// Run the discrete-event simulation / scheduler:
 	sim.Run()
 
-	// Write CSV schedule log
-	csvPath := filepath.Join(dir, "schedule_log.csv")
-	out, err := os.Create(csvPath)
+	// Save both Logs and CSV into a timestamped subfolder:
+	ts := strconv.FormatInt(time.Now().Unix(), 10)
+	dir := fmt.Sprintf("ecsched/results/%s_results", ts)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		log.Fatalf("mkdir: %v", err)
+	}
+
+	// 1) write out the schedule_log.csv
+	csvOut, err := os.Create(dir + "/schedule_log.csv")
 	if err != nil {
-		log.Fatalf("Failed to create CSV: %v", err)
+		log.Fatalf("open csv: %v", err)
 	}
-	defer out.Close()
+	defer csvOut.Close()
 
-	out.WriteString("job_id,node,submit,start,end\n")
+	csvOut.WriteString("job_id,node,submit,start,end\n")
 	for _, line := range sim.Logs {
-		out.WriteString(line + "\n")
+		csvOut.WriteString(line + "\n")
 	}
 
-	log.Printf("All outputs saved under %s", dir)
-}
+	// 2) write the raw debug log
+	logOut, err := os.Create(dir + "/run.log")
+	if err != nil {
+		log.Fatalf("open log: %v", err)
+	}
+	defer logOut.Close()
+	// // assume sim.DebugLines holds your debug output if you’ve been collecting it; 
+	// // otherwise just replay sim.Logs with timestamps:
+	// for _, entry := range sim.Logs {
+	// 	logOut.WriteString(entry + "\n")
+	// }
 
+	log.Printf("Results written to %s\n", dir)
+}
