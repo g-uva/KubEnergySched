@@ -1,62 +1,27 @@
 package ecsched
 
 import (
-	"container/heap"
+	"container/list"
 	"fmt"
 	"log"
+	"math"
 	"sort"
 	"time"
 )
 
-// -------------------- Node & Workload --------------------
+// SchedulerType determines which scheduling algorithm to use
+// MCFP: cost-based dot-product + CI, Kubernetes and Swarm as baselines
+// to compare per Hu et al. 2020
 
-type Node struct {
-	Name             string
-	TotalCPU         float64
-	TotalMemory      float64
-	AvailableCPU     float64
-	AvailableMemory  float64
-	CarbonIntensity  float64    // gCO₂/kWh, TODO: fetch from API
-	Reservations     []time.Time
-}
+type SchedulerType int
 
-func NewNode(name string, cpu, mem, ci float64) *Node {
-	return &Node{
-		Name:            name,
-		TotalCPU:        cpu,
-		TotalMemory:     mem,
-		AvailableCPU:    cpu,
-		AvailableMemory: mem,
-		CarbonIntensity: ci,
-		Reservations:    nil,
-	}
-}
+const (
+	MCFP SchedulerType = iota
+	Kubernetes
+	Swarm
+)
 
-// CanAccept returns true if free resources suffice
-func (n *Node) CanAccept(w Workload) bool {
-	return n.AvailableCPU >= w.CPU && n.AvailableMemory >= w.Memory
-}
-
-// Reserve allocates resources and records end-time
-func (n *Node) Reserve(w Workload, at time.Time) {
-	n.AvailableCPU -= w.CPU
-	n.AvailableMemory -= w.Memory
-	n.Reservations = append(n.Reservations, at.Add(w.Duration))
-}
-
-// ReleaseExpired frees resources whose end-time <= now
-func (n *Node) ReleaseExpired(now time.Time) {
-	keep := n.Reservations[:0]
-	for _, t := range n.Reservations {
-		if t.After(now) {
-			keep = append(keep, t)
-		} // expired times assumed auto-restored via End events
-	}
-	n.Reservations = keep
-}
-
-// -------------------- Workload & Event --------------------
-
+// Workload represents a job to schedule
 type Workload struct {
 	ID         string
 	SubmitTime time.Time
@@ -65,72 +30,241 @@ type Workload struct {
 	Memory     float64
 }
 
+// SimulatedNode represents a node in the cluster
+// Reservations queue holds end-times for running jobs
+type SimulatedNode struct {
+	Name             string
+	TotalCPU         float64
+	TotalMemory      float64
+	AvailableCPU     float64
+	AvailableMemory  float64
+	CarbonIntensity  float64    // gCO₂/kWh, static or TODO fetch dynamic
+	Reservations     *list.List // each element: time.Time
+}
+
+// NewNode creates a node with given capacity and CI
+func NewNode(name string, cpu, mem, ci float64) *SimulatedNode {
+	n := &SimulatedNode{
+		Name:            name,
+		TotalCPU:        cpu,
+		TotalMemory:     mem,
+		AvailableCPU:    cpu,
+		AvailableMemory: mem,
+		CarbonIntensity: ci,
+		Reservations:    list.New(),
+	}
+	return n
+}
+
+// CanAccept checks if the node has enough free resources for the workload
+func (n *SimulatedNode) CanAccept(w Workload) bool {
+	return n.AvailableCPU >= w.CPU && n.AvailableMemory >= w.Memory
+}
+
+// Reserve consumes resources and records the end time of the job
+func (n *SimulatedNode) Reserve(w Workload, start time.Time) {
+	n.AvailableCPU -= w.CPU
+	n.AvailableMemory -= w.Memory
+	n.Reservations.PushBack(start.Add(w.Duration))
+}
+
+// Release frees any resources whose recorded end-time is <= t
+func (n *SimulatedNode) Release(t time.Time) {
+	for e := n.Reservations.Front(); e != nil; {
+		next := e.Next()
+		end := e.Value.(time.Time)
+		if !end.After(t) {
+			// approximate full release; TODO: track per-job resource
+			n.AvailableCPU = math.Min(n.AvailableCPU+wPlaceholderCPU, n.TotalCPU)
+			n.AvailableMemory = math.Min(n.AvailableMemory+wPlaceholderMem, n.TotalMemory)
+			n.Reservations.Remove(e)
+		}
+		e = next
+	}
+}
+
+// DiscreteEventScheduler drives the event loop
+type DiscreteEventScheduler struct {
+	Clock     time.Time
+	Nodes     []*SimulatedNode
+	Events    []Event  // sorted by Time
+	Logs      []string // CSV lines: job,node,submit,start,end
+	SchedType SchedulerType
+}
+
 type EventType int
 
 const (
-	Arrival EventType = iota
-	End
+	JobArrival EventType = iota
+	JobEnd
 )
 
 type Event struct {
 	Time     time.Time
 	Type     EventType
 	Workload Workload
-	Node     *Node
+	Node     *SimulatedNode
 }
 
-// -------------------- Scheduler --------------------
-
-type Scheduler struct {
-	Clock    time.Time
-	Nodes    []*Node
-	timeline []Event    // pending events sorted by Time
-	pending  []Workload // batch of arrivals waiting assignment
-	Logs     []string   // "job,node,submit,start,end"
-}
-
-// NewScheduler constructs with given nodes
-func NewScheduler(nodes []*Node) *Scheduler {
-	return &Scheduler{Clock: time.Now(), Nodes: nodes}
-}
-
-// AddWorkload schedules an arrival event
-func (s *Scheduler) AddWorkload(w Workload) {
-	s.timeline = append(s.timeline, Event{Time: w.SubmitTime, Type: Arrival, Workload: w})
-}
-
-// Run processes all events
-func (s *Scheduler) Run() {
-	for len(s.timeline) > 0 {
-		s.sortTimeline()
-		e := s.timeline[0]
-		s.timeline = s.timeline[1:]
-		s.Clock = e.Time
-
-		// release any expired at now
-		for _, n := range s.Nodes {
-			n.ReleaseExpired(s.Clock)
-		}
-
-		switch e.Type {
-		case Arrival:
-			s.pending = append(s.pending, e.Workload)
-			s.scheduleBatch()
-
-		case End:
-			e.Node.AvailableCPU += e.Workload.CPU
-			e.Node.AvailableMemory += e.Workload.Memory
-			log.Printf("Ended %s at %v on %s", e.Workload.ID, s.Clock, e.Node.Name)
-		}
+// NewScheduler initializes a scheduler with nodes and a strategy
+func NewScheduler(nodes []*SimulatedNode, st SchedulerType) *DiscreteEventScheduler {
+	return &DiscreteEventScheduler{
+		Clock:     time.Now(),
+		Nodes:     nodes,
+		Events:    []Event{},
+		Logs:      []string{},
+		SchedType: st,
 	}
 }
 
-// sortTimeline orders events by Time ascending
-func (s *Scheduler) sortTimeline() {
-	sort.Slice(s.timeline, func(i, j int) bool {
-		return s.timeline[i].Time.Before(s.timeline[j].Time)
+// AddWorkload enqueues an arrival event
+func (s *DiscreteEventScheduler) AddWorkload(w Workload) {
+	s.Events = append(s.Events, Event{Time: w.SubmitTime, Type: JobArrival, Workload: w})
+}
+
+// Run processes all events in time order
+func (s *DiscreteEventScheduler) Run() {
+	s.sortEvents()
+	for len(s.Events) > 0 {
+		e := s.Events[0]
+		s.Events = s.Events[1:]
+		s.Clock = e.Time
+		// release resources first
+		s.processReleases(s.Clock)
+		s.handleEvent(e)
+	}
+}
+
+func (s *DiscreteEventScheduler) sortEvents() {
+	sort.Slice(s.Events, func(i, j int) bool {
+		return s.Events[i].Time.Before(s.Events[j].Time)
 	})
 }
+
+// processReleases frees resources for ended jobs
+func (s *DiscreteEventScheduler) processReleases(t time.Time) {
+	for _, n := range s.Nodes {
+		n.Release(t)
+	}
+}
+
+// handleEvent dispatches arrival or end
+func (s *DiscreteEventScheduler) handleEvent(e Event) {
+	switch e.Type {
+	case JobArrival:
+		scheduleNode := s.selectNode(e.Workload)
+		if scheduleNode != nil {
+			s.reserveAndLog(scheduleNode, e.Workload)
+		} else {
+			log.Printf("Job %s could not be scheduled", e.Workload.ID)
+		}
+	case JobEnd:
+		log.Printf("Job %s ended on %s at %v", e.Workload.ID, e.Node.Name, s.Clock)
+	}
+}
+
+// reserveAndLog reserves resources, enqueues end event, and logs CSV
+func (s *DiscreteEventScheduler) reserveAndLog(n *SimulatedNode, w Workload) {
+	n.Reserve(w, s.Clock)
+	s.Events = append(s.Events, Event{Time: s.Clock.Add(w.Duration), Type: JobEnd, Node: n, Workload: w})
+	s.Logs = append(s.Logs, fmt.Sprintf("%s,%s,%v,%v,%v", w.ID, n.Name, w.SubmitTime, s.Clock, s.Clock.Add(w.Duration)))
+	log.Printf("Scheduled %s on %s at %v", w.ID, n.Name, s.Clock)
+}
+
+// selectNode picks a node based on the chosen strategy
+func (s *DiscreteEventScheduler) selectNode(w Workload) *SimulatedNode {
+	switch s.SchedType {
+	case Kubernetes:
+		return s.scheduleKubernetes(w)
+	case Swarm:
+		return s.scheduleSwarm(w)
+	case MCFP:
+		return s.scheduleMCFP(w)
+	default:
+		return nil
+	}
+}
+
+// scheduleKubernetes selects least-loaded node (sum usage minimal)
+func (s *DiscreteEventScheduler) scheduleKubernetes(w Workload) *SimulatedNode {
+	cands := []*SimulatedNode{}
+	for _, n := range s.Nodes {
+		if n.CanAccept(w) {
+			cands = append(cands, n)
+		}
+	}
+	if len(cands) == 0 {
+		return nil
+	}
+	sort.Slice(cands, func(i, j int) bool {
+		used1 := (cands[i].TotalCPU-cands[i].AvailableCPU)/cands[i].TotalCPU + (cands[i].TotalMemory-cands[i].AvailableMemory)/cands[i].TotalMemory
+		used2 := (cands[j].TotalCPU-cands[j].AvailableCPU)/cands[j].TotalCPU + (cands[j].TotalMemory-cands[j].AvailableMemory)/cands[j].TotalMemory
+		if used1 != used2 {
+			return used1 < used2
+		}
+		return cands[i].Name < cands[j].Name
+	})
+	return cands[0]
+}
+
+// scheduleSwarm selects most-loaded node (sum usage maximal)
+func (s *DiscreteEventScheduler) scheduleSwarm(w Workload) *SimulatedNode {
+	cands := []*SimulatedNode{}
+	for _, n := range s.Nodes {
+		if n.CanAccept(w) {
+			cands = append(cands, n)
+		}
+	}
+	if len(cands) == 0 {
+		return nil
+	}
+	sort.Slice(cands, func(i, j int) bool {
+		used1 := (cands[i].TotalCPU-cands[i].AvailableCPU)/cands[i].TotalCPU + (cands[i].TotalMemory-cands[i].AvailableMemory)/cands[i].TotalMemory
+		used2 := (cands[j].TotalCPU-cands[j].AvailableCPU)/cands[j].TotalCPU + (cands[j].TotalMemory-cands[j].AvailableMemory)/cands[j].TotalMemory
+		if used1 != used2 {
+			return used1 > used2
+		}
+		return cands[i].Name < cands[j].Name
+	})
+	return cands[0]
+}
+
+// scheduleMCFP uses dot-product + CI cost model to pick min-cost node
+func (s *DiscreteEventScheduler) scheduleMCFP(w Workload) *SimulatedNode {
+	var best *SimulatedNode
+	bestCost := math.MaxFloat64
+	for _, n := range s.Nodes {
+		if !n.CanAccept(w) {
+			continue
+		}
+		rawDP := w.CPU*n.TotalCPU + w.Memory*n.TotalMemory
+		rawCI := n.CarbonIntensity
+		// cost = -DP + 0.1*CI (higher DP lower cost, CI penalized lightly)
+		cost := -rawDP + 0.1*rawCI
+		log.Printf("MCFP cost for Job %s->Node %s: DP=%.2f, CI=%.2f, cost=%.2f", w.ID, n.Name, rawDP, rawCI, cost)
+		if cost < bestCost || best == nil {
+			bestCost = cost
+			best = n
+		}
+	}
+	return best
+}
+
+```go
+// scheduleBatch is a helper to batch up workloads, build the flow network,
+// solve MCFP once, and return a map of assignments.
+func (s *DiscreteEventScheduler) scheduleBatch(ws []Workload) map[string]*SimulatedNode {
+	assign := make(map[string]*SimulatedNode)
+	// TODO: 1) build flow graph over ws and s.Nodes
+	//       2) run min-cost flow solver
+	//       3) extract mappings container->node into assign
+	// placeholder: fall back to per-workload MCFP
+	for _, w := range ws {
+		assign[w.ID] = s.scheduleMCFP(w)
+	}
+	return assign
+}
+
 
 // scheduleBatch batches pending workloads into an MCFP and assigns as many as possible
 func (s *Scheduler) scheduleBatch() {
@@ -223,104 +357,10 @@ func (s *Scheduler) scheduleBatch() {
 	}
 	s.pending = newPending
 }
+```
 
-// -------------------- MCFP Implementation --------------------
-
-type edge struct {
-	to, rev, cap, cost, flow int
-}
-
-type graph struct {
-	n   int
-	adj [][]edge
-}
-
-func newGraph(n int) *graph {
-	return &graph{n: n, adj: make([][]edge, n)}
-}
-
-func (g *graph) addEdge(u, v, cap, cost int) {
-	g.adj[u] = append(g.adj[u], edge{to: v, rev: len(g.adj[v]), cap: cap, cost: cost})
-	g.adj[v] = append(g.adj[v], edge{to: u, rev: len(g.adj[u]) - 1, cap: 0, cost: -cost})
-}
-
-func (g *graph) minCostMaxFlow(s, t int) (int, int) {
-	N := g.n
-	const INF = int(1e9)
-	pot := make([]int, N)
-	flow, flowCost := 0, 0
-	for {
-		dist := make([]int, N)
-		prevV := make([]int, N)
-		prevE := make([]int, N)
-		for i := range dist {
-			dist[i] = INF
-		}
-		dist[s] = 0
-
-		hq := &intHeap{}
-		heap.Init(hq)
-		heap.Push(hq, heapItem{v: s, dist: 0})
-
-		for hq.Len() > 0 {
-			it := heap.Pop(hq).(heapItem)
-			if it.dist > dist[it.v] {
-				continue
-			}
-			for ei, e := range g.adj[it.v] {
-				if e.cap > e.flow {
-					rc := e.cost + pot[it.v] - pot[e.to]
-					if nd := dist[it.v] + rc; nd < dist[e.to] {
-						dist[e.to] = nd
-						prevV[e.to] = it.v
-						prevE[e.to] = ei
-						heap.Push(hq, heapItem{v: e.to, dist: nd})
-					}
-				}
-			}
-		}
-		if dist[t] == INF {
-			break
-		}
-		for i := 0; i < N; i++ {
-			if dist[i] < INF {
-				pot[i] += dist[i]
-			}
-		}
-		// augment one unit
-		df := 1
-		for v := t; v != s; v = prevV[v] {
-			e := &g.adj[prevV[v]][prevE[v]]
-			if df > e.cap-e.flow {
-				df = e.cap - e.flow
-			}
-		}
-		if df == 0 {
-			break
-		}
-		for v := t; v != s; v = prevV[v] {
-			e := &g.adj[prevV[v]][prevE[v]]
-			e.flow += df
-			g.adj[v][e.rev].flow -= df
-			flowCost += df * e.cost
-		}
-		flow += df
-	}
-	return flow, flowCost
-}
-
-type heapItem struct { v, dist int }
-
-type intHeap []heapItem
-
-func (h intHeap) Len() int            { return len(h) }
-func (h intHeap) Less(i, j int) bool  { return h[i].dist < h[j].dist }
-func (h intHeap) Swap(i, j int)       { h[i], h[j] = h[j], h[i] }
-func (h *intHeap) Push(x interface{}) { *h = append(*h, x.(heapItem)) }
-func (h *intHeap) Pop() interface{} {
-	old := *h
-	n := len(old)
-	x := old[n-1]
-	*h = old[:n-1]
-	return x
-}
+// TODO placeholders until job-specific CPU/Memory tracked during release
+const (
+	wPlaceholderCPU = 0.0
+	wPlaceholderMem = 0.0
+)
