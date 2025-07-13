@@ -1,0 +1,37 @@
+package cisched
+
+import (
+	"log"
+	"time"
+	"kube-scheduler/ecsched"
+)
+
+// CIScheduler wraps DiscreteEventScheduler for CI-awareness
+// TODO: inject actual CI client
+
+type CIScheduler struct {
+	inner *ecsched.DiscreteEventScheduler
+}
+
+// NewCIScheduler builds a CI-aware baseline (using MCFP)
+func NewCIScheduler(nodes []*ecsched.SimulatedNode) *CIScheduler {
+	s := ecsched.NewScheduler(nodes)
+	return &CIScheduler{inner: s}
+}
+
+// AddWorkload forwards arrival
+func (s *CIScheduler) AddWorkload(w ecsched.Workload) {
+	s.inner.AddWorkload(w)
+}
+
+// Run fetches CI metrics (TODO) then executes scheduling
+func (s *CIScheduler) Run() {
+	log.Print("[CIScheduler] fetching CI metrics... (TODO)")
+	time.Sleep(10 * time.Millisecond)
+	s.inner.Run()
+}
+
+// Logs exposes scheduling decisions
+func (s *CIScheduler) Logs() []ecsched.LogEntry {
+	return s.inner.Logs
+}	
