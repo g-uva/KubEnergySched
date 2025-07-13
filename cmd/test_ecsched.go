@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func loadWorkloads(path string) []ecsched.Workload {
+func _loadWorkloads(path string) []ecsched.Workload {
 	file, err := os.Open(path)
 	if err != nil {
 		log.Fatalf("Failed to open CSV: %v", err)
@@ -47,19 +47,19 @@ func loadWorkloads(path string) []ecsched.Workload {
 	return workloads
 }
 
-func main() {
+func _main() {
 	// Create 100 homogeneous nodes:
-	var nodes []*ecsched.Node
+	var nodes []*ecsched.SimulatedNode
 	for i := 1; i <= 100; i++ {
 		name := fmt.Sprintf("n%d", i)
-		nodes = append(nodes, &ecsched.Node{
+		nodes = append(nodes, &ecsched.SimulatedNode{
 			Name:            name,
 			AvailableCPU:    16.0,
 			AvailableMemory: 32768.0,
 		})
 	}
 
-	sim := ecsched.NewScheduler(nodes)
+	sim := ecsched.NewScheduler(nodes, 0)
 	wls := loadWorkloads("powertrace/data/powertrace.csv")
 
 	for _, w := range wls {
@@ -94,7 +94,7 @@ func main() {
 		log.Fatalf("open log: %v", err)
 	}
 	defer logOut.Close()
-	// // assume sim.DebugLines holds your debug output if you’ve been collecting it; 
+	// // assume sim.DebugLines holds the debug output if I've been collecting it; 
 	// // otherwise just replay sim.Logs with timestamps:
 	// for _, entry := range sim.Logs {
 	// 	logOut.WriteString(entry + "\n")
