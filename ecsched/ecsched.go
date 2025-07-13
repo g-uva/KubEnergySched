@@ -134,81 +134,93 @@ func (s *Scheduler) sortTimeline() {
 	})
 }
 
-// scheduleBatch assigns all pending workloads via MCFP
+// scheduleBatch batches all pending workloads into one MCFP and assigns as many as possible.
 func (s *Scheduler) scheduleBatch() {
-	n := len(s.pending)
-	if n == 0 {
-		return
-	}
-	m := len(s.Nodes)
+    n := len(s.pending)
+    if n == 0 {
+        return
+    }
+    m := len(s.Nodes)
 
-	// define graph nodes
-	src := 0
-	workOff := 1
-	nodeOff := workOff + n
-	unsched := nodeOff + m
-	sink := unsched + 1
-	N := sink + 1
+    // 1) Log batch size
+    log.Printf("→ scheduleBatch: batching %d pending jobs", n)
 
-	g := newGraph(N)
+    // graph nodes:
+    src := 0
+    workOff := 1
+    nodeOff := workOff + n
+    unsched := nodeOff + m
+    sink := unsched + 1
+    N := sink + 1
 
-	// source -> each workload
-	for i := 0; i < n; i++ {
-		g.addEdge(src, workOff+i, 1, 0)
-	}
-	// each workload -> machine or unsched
-	for i, w := range s.pending {
-		for j, node := range s.Nodes {
-			if node.CanAccept(w) {
-				// dot-product cost negated for MCFP
-				dp := int(-(w.CPU*node.TotalCPU + w.Memory*node.TotalMemory))
-				g.addEdge(workOff+i, nodeOff+j, 1, dp)
-			}
-		}
-		// unscheduled fallback
-		g.addEdge(workOff+i, unsched, 1, 0)
-	}
-	// machines -> sink
-	for j := 0; j < m; j++ {
-		g.addEdge(nodeOff+j, sink, 1, 0)
-	}
-	// unsched -> sink capacity n
-	g.addEdge(unsched, sink, n, 0)
+    g := newGraph(N)
 
-	flow, _ := g.minCostMaxFlow(src, sink)
-	if flow == 0 {
-		return
-	}
+    // src -> workloads
+    for i := 0; i < n; i++ {
+        g.addEdge(src, workOff+i, 1, 0)
+    }
 
-	// extract assigned and schedule
-	newPend := make([]Workload, 0, n)
-	for i, w := range s.pending {
-		assigned := false
-		for _, e := range g.adj[workOff+i] {
-			if e.to >= nodeOff && e.to < nodeOff+m && e.flow > 0 {
-				j := e.to - nodeOff
-				node := s.Nodes[j]
-				node.Reserve(w, s.Clock)
-				// enqueue end event
-				s.timeline = append(s.timeline, Event{
-					Time:     s.Clock.Add(w.Duration),
-					Type:     End,
-					Workload: w,
-					Node:     node,
-				})
-				// log entry
-				s.Logs = append(s.Logs,
-					fmt.Sprintf("%s,%s,%v,%v,%v", w.ID, node.Name, w.SubmitTime, s.Clock, s.Clock.Add(w.Duration)),
-				)
-				assigned = true
-				break
-			}
-		}
-		if !assigned {
-			newPend = append(newPend, w)
-		}
-	}
-	s.pending = newPend
+    // workloads -> machines & unscheduled
+    for i, w := range s.pending {
+        for j, node := range s.Nodes {
+            if node.CanAccept(w) {
+                // 2) Compute & log dot-product score (positive)
+                rawDP := w.CPU*node.TotalCPU + w.Memory*node.TotalMemory
+                dp := int(-rawDP) // negate for min-cost
+                log.Printf("   • DP score job %s → node %s: %.2f", w.ID, node.Name, rawDP)
+                g.addEdge(workOff+i, nodeOff+j, 1, dp)
+            }
+        }
+        // fallback unscheduled
+        g.addEdge(workOff+i, unsched, 1, 0)
+    }
+
+    // machines -> sink
+    for j := 0; j < m; j++ {
+        g.addEdge(nodeOff+j, sink, 1, 0)
+    }
+    // unscheduled -> sink (can send all)
+    g.addEdge(unsched, sink, n, 0)
+
+    // 3) Run MCFP and log total assignments
+    flow, _ := g.minCostMaxFlow(src, sink)
+    log.Printf("← scheduleBatch: MCFP assigned %d/%d jobs", flow, n)
+    if flow == 0 {
+        return
+    }
+
+    // extract assignments
+    newPending := make([]Workload, 0, n)
+    for i, w := range s.pending {
+        assigned := false
+        for _, e := range g.adj[workOff+i] {
+            if e.to >= nodeOff && e.to < nodeOff+m && e.flow > 0 {
+                j := e.to - nodeOff
+                node := s.Nodes[j]
+
+                // 4) Log the actual assignment edge
+                log.Printf("   → Assign job %s to node %s (flow=%d)", w.ID, node.Name, e.flow)
+
+                node.Reserve(w, s.Clock)
+                // schedule end event
+                s.timeline = append(s.timeline, Event{
+                    Time:     s.Clock.Add(w.Duration),
+                    Type:     End,
+                    Workload: w,
+                    Node:     node,
+                })
+                s.Logs = append(s.Logs,
+                    fmt.Sprintf("%s,%s,%v,%v,%v",
+                        w.ID, node.Name, w.SubmitTime, s.Clock, s.Clock.Add(w.Duration)))
+                assigned = true
+                break
+            }
+        }
+        if !assigned {
+            newPending = append(newPending, w)
+        }
+    }
+    s.pending = newPending
 }
 
 // -------------------- MCFP Implementation --------------------
