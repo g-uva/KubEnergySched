@@ -250,114 +250,114 @@ func (s *DiscreteEventScheduler) scheduleMCFP(w Workload) *SimulatedNode {
 	return best
 }
 
-```go
-// scheduleBatch is a helper to batch up workloads, build the flow network,
-// solve MCFP once, and return a map of assignments.
-func (s *DiscreteEventScheduler) scheduleBatch(ws []Workload) map[string]*SimulatedNode {
-	assign := make(map[string]*SimulatedNode)
-	// TODO: 1) build flow graph over ws and s.Nodes
-	//       2) run min-cost flow solver
-	//       3) extract mappings container->node into assign
-	// placeholder: fall back to per-workload MCFP
-	for _, w := range ws {
-		assign[w.ID] = s.scheduleMCFP(w)
-	}
-	return assign
-}
+
+// // scheduleBatch is a helper to batch up workloads, build the flow network,
+// // solve MCFP once, and return a map of assignments.
+// func (s *DiscreteEventScheduler) scheduleBatch(ws []Workload) map[string]*SimulatedNode {
+// 	assign := make(map[string]*SimulatedNode)
+// 	// TODO: 1) build flow graph over ws and s.Nodes
+// 	//       2) run min-cost flow solver
+// 	//       3) extract mappings container->node into assign
+// 	// placeholder: fall back to per-workload MCFP
+// 	for _, w := range ws {
+// 		assign[w.ID] = s.scheduleMCFP(w)
+// 	}
+// 	return assign
+// }
 
 
-// scheduleBatch batches pending workloads into an MCFP and assigns as many as possible
-func (s *Scheduler) scheduleBatch() {
-	n := len(s.pending)
-	if n == 0 {
-		return
-	}
-	m := len(s.Nodes)
+// // scheduleBatch batches pending workloads into an MCFP and assigns as many as possible
+// func (s *Scheduler) scheduleBatch() {
+// 	n := len(s.pending)
+// 	if n == 0 {
+// 		return
+// 	}
+// 	m := len(s.Nodes)
 
-	// 1) Log batch size
-	log.Printf("→ scheduleBatch: batching %d pending jobs", n)
+// 	// 1) Log batch size
+// 	log.Printf("→ scheduleBatch: batching %d pending jobs", n)
 
-	// Graph offsets
-	src := 0
-	workOff := 1
-	nodeOff := workOff + n
-	unsched := nodeOff + m
-	sink := unsched + 1
-	N := sink + 1
+// 	// Graph offsets
+// 	src := 0
+// 	workOff := 1
+// 	nodeOff := workOff + n
+// 	unsched := nodeOff + m
+// 	sink := unsched + 1
+// 	N := sink + 1
 
-	g := newGraph(N)
+// 	g := newGraph(N)
 
-	// src -> workloads
-	for i := 0; i < n; i++ {
-		g.addEdge(src, workOff+i, 1, 0)
-	}
+// 	// src -> workloads
+// 	for i := 0; i < n; i++ {
+// 		g.addEdge(src, workOff+i, 1, 0)
+// 	}
 
-	// workloads -> machines & unscheduled
-	for i, w := range s.pending {
-		for j, node := range s.Nodes {
-			if node.CanAccept(w) {
-				// compute dot-product
-				rawDP := w.CPU*node.TotalCPU + w.Memory*node.TotalMemory
-				// compute CI score: TODO refine formula or fetch dynamic metrics
-				rawCI := node.CarbonIntensity
+// 	// workloads -> machines & unscheduled
+// 	for i, w := range s.pending {
+// 		for j, node := range s.Nodes {
+// 			if node.CanAccept(w) {
+// 				// compute dot-product
+// 				rawDP := w.CPU*node.TotalCPU + w.Memory*node.TotalMemory
+// 				// compute CI score: TODO refine formula or fetch dynamic metrics
+// 				rawCI := node.CarbonIntensity
 
-				// combine costs: weight dp and ci
-				costF := -rawDP + 0.1*rawCI // dp prioritized, CI penalizes
-				cost := int(costF * 1000)
+// 				// combine costs: weight dp and ci
+// 				costF := -rawDP + 0.1*rawCI // dp prioritized, CI penalizes
+// 				cost := int(costF * 1000)
 
-				log.Printf("   • Job %s->Node %s: DP=%.2f, CI=%.2f, cost=%d", w.ID, node.Name, rawDP, rawCI, cost)
-				g.addEdge(workOff+i, nodeOff+j, 1, cost)
-			}
-		}
-		// fallback unscheduled
-		g.addEdge(workOff+i, unsched, 1, 0)
-	}
+// 				log.Printf("   • Job %s->Node %s: DP=%.2f, CI=%.2f, cost=%d", w.ID, node.Name, rawDP, rawCI, cost)
+// 				g.addEdge(workOff+i, nodeOff+j, 1, cost)
+// 			}
+// 		}
+// 		// fallback unscheduled
+// 		g.addEdge(workOff+i, unsched, 1, 0)
+// 	}
 
-	// machines -> sink
-	for j := 0; j < m; j++ {
-		g.addEdge(nodeOff+j, sink, 1, 0)
-	}
-	// unscheduled -> sink
-	g.addEdge(unsched, sink, n, 0)
+// 	// machines -> sink
+// 	for j := 0; j < m; j++ {
+// 		g.addEdge(nodeOff+j, sink, 1, 0)
+// 	}
+// 	// unscheduled -> sink
+// 	g.addEdge(unsched, sink, n, 0)
 
-	// 2) Run MCFP
-	flow, _ := g.minCostMaxFlow(src, sink)
-	log.Printf("← scheduleBatch: MCFP assigned %d/%d jobs", flow, n)
-	if flow == 0 {
-		return
-	}
+// 	// 2) Run MCFP
+// 	flow, _ := g.minCostMaxFlow(src, sink)
+// 	log.Printf("← scheduleBatch: MCFP assigned %d/%d jobs", flow, n)
+// 	if flow == 0 {
+// 		return
+// 	}
 
-	// extract assignments
-	newPending := make([]Workload, 0, n)
-	for i, w := range s.pending {
-		assigned := false
-		for _, e := range g.adj[workOff+i] {
-			if e.to >= nodeOff && e.to < nodeOff+m && e.flow > 0 {
-				j := e.to - nodeOff
-				node := s.Nodes[j]
+// 	// extract assignments
+// 	newPending := make([]Workload, 0, n)
+// 	for i, w := range s.pending {
+// 		assigned := false
+// 		for _, e := range g.adj[workOff+i] {
+// 			if e.to >= nodeOff && e.to < nodeOff+m && e.flow > 0 {
+// 				j := e.to - nodeOff
+// 				node := s.Nodes[j]
 
-				log.Printf("   → Assign Job %s to Node %s (flow=%d)", w.ID, node.Name, e.flow)
+// 				log.Printf("   → Assign Job %s to Node %s (flow=%d)", w.ID, node.Name, e.flow)
 
-				node.Reserve(w, s.Clock)
-				s.timeline = append(s.timeline, Event{
-					Time:     s.Clock.Add(w.Duration),
-					Type:     End,
-					Workload: w,
-					Node:     node,
-				})
-				s.Logs = append(s.Logs,
-					fmt.Sprintf("%s,%s,%v,%v,%v", w.ID, node.Name, w.SubmitTime, s.Clock, s.Clock.Add(w.Duration)))
-				assigned = true
-				break
-			}
-		}
-		if !assigned {
-			newPending = append(newPending, w)
-		}
-	}
-	s.pending = newPending
-}
-```
+// 				node.Reserve(w, s.Clock)
+// 				s.timeline = append(s.timeline, Event{
+// 					Time:     s.Clock.Add(w.Duration),
+// 					Type:     End,
+// 					Workload: w,
+// 					Node:     node,
+// 				})
+// 				s.Logs = append(s.Logs,
+// 					fmt.Sprintf("%s,%s,%v,%v,%v", w.ID, node.Name, w.SubmitTime, s.Clock, s.Clock.Add(w.Duration)))
+// 				assigned = true
+// 				break
+// 			}
+// 		}
+// 		if !assigned {
+// 			newPending = append(newPending, w)
+// 		}
+// 	}
+// 	s.pending = newPending
+// }
+
 
 // TODO placeholders until job-specific CPU/Memory tracked during release
 const (
