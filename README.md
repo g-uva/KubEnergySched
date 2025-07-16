@@ -123,6 +123,8 @@ kube-energy-scheduler/
      - Strategy KPIs over time
    - Optionally connect to SQLite, TimescaleDB, or InfluxDB for deeper analysis
 
+9. **ML Workload prediction/learning model**
+
 
 ## What’s Working
 

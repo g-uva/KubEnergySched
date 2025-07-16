@@ -28,6 +28,7 @@ type Workload struct {
 	Duration   time.Duration
 	CPU        float64
 	Memory     float64
+	Tag		 string
 }
 
 // SimulatedNode represents a cluster node
@@ -39,6 +40,7 @@ type SimulatedNode struct {
 	AvailableMemory float64
 	CarbonIntensity float64    // gCO₂/kWh, static or TODO fetch
 	Reservations    *list.List // holds end-times for allocations
+	Metadata		map[string]string
 }
 
 // LogEntry captures one placement decision
@@ -98,6 +100,8 @@ type DiscreteEventScheduler struct {
 	Events    []Event
 	Logs      []LogEntry
 	SchedType SchedulerType
+	CIBaseWeight float64
+	CIDynAlpha float64
 }
 
 type EventType int
@@ -121,6 +125,8 @@ func NewScheduler(nodes []*SimulatedNode) *DiscreteEventScheduler {
 		Events:    []Event{},
 		Logs:      []LogEntry{},
 		SchedType: MCFP,
+		CIBaseWeight: 0.1,
+        	CIDynAlpha:   1.0,
 	}
 }
 
@@ -229,6 +235,21 @@ func (s *DiscreteEventScheduler) scheduleSwarm(w Workload) *SimulatedNode {
 }
 
 func (s *DiscreteEventScheduler) scheduleMCFP(w Workload) *SimulatedNode {
+	// 1) compute CI volatility
+	var sum, sumSq float64
+	for _, n := range s.Nodes {
+		ci := n.CarbonIntensity
+		sum += ci
+		sumSq += ci * ci
+	}
+	mean := sum / float64(len(s.Nodes))
+	variance := sumSq/float64(len(s.Nodes)) - mean*mean
+	stddev := math.Sqrt(variance)
+
+	// 2) inflate the base weight by (1 + alpha * CV)
+	dynWeight := s.CIBaseWeight * (1 + s.CIDynAlpha*(stddev/mean))
+
+	// 3) pick the node with minimal cost = −DP + dynWeight*CI
 	var best *SimulatedNode
 	bestCost := math.MaxFloat64
 	for _, n := range s.Nodes {
@@ -237,7 +258,7 @@ func (s *DiscreteEventScheduler) scheduleMCFP(w Workload) *SimulatedNode {
 		}
 		rawDP := w.CPU*n.TotalCPU + w.Memory*n.TotalMemory
 		rawCI := n.CarbonIntensity
-		cost := -rawDP + 0.1*rawCI
+		cost := -rawDP+dynWeight*rawCI
 		log.Printf("MCFP cost for Job %s->Node %s: DP=%.2f, CI=%.2f, cost=%.2f", w.ID, n.Name, rawDP, rawCI, cost)
 		if cost < bestCost {
 			bestCost = cost

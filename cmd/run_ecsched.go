@@ -8,7 +8,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+	"flag"
 
+	"kube-scheduler/pkg/generator"
 	"kube-scheduler/ecsched"
 	"kube-scheduler/cisched"
 	"kube-scheduler/k8sched"
@@ -57,6 +59,29 @@ func loadWorkloads(path string) []ecsched.Workload {
 }
 
 func main() {
+    var nodesCSV, wlCSV string
+    flag.StringVar(&nodesCSV, "nodes-csv", "", "path to nodes CSV (auto-generate if empty)")
+    flag.StringVar(&wlCSV,    "wl-csv",    "", "path to workloads CSV (auto-generate if empty)")
+    flag.Parse()
+
+    if nodesCSV == "" {
+        nodesCSV = "config/nodes.csv"
+        if err := generator.GenerateNodes(nodesCSV); err != nil {
+            log.Fatalf("node generation failed: %v", err)
+        }
+    }
+    if wlCSV == "" {
+        wlCSV = "config/workloads.csv"
+        if err := generator.GenerateWorkloads(wlCSV, time.Now().Unix()); err != nil {
+            log.Fatalf("workload generation failed: %v", err)
+        }
+    }
+
+    // Then pass nodesCSV and wlCSV into your existing loader routines:
+//     nodes := loadNodesFromCSV(nodesCSV)      // implement CSV reader + dynamic CI parser
+//     wls   := loadWorkloadsFromCSV(wlCSV)     // implement parser that sets Workload.Tag
+
+
 	wls := loadWorkloads("powertrace/data/powertrace.csv")
 	base := fmt.Sprintf("results/%d_results", time.Now().Unix())
 	if err := os.MkdirAll(base, 0755); err != nil {
