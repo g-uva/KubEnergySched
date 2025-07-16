@@ -71,7 +71,7 @@ func LoadNodesFromCSV(path string) []*ecsched.SimulatedNode {
         }
 
         node := ecsched.NewNode(name, float64(cpu), float64(mem), baseCI)
-        // stash the profile string for your CI‐aware wrapper:
+        // stash the profile string for my CI‐aware wrapper:
         node.Metadata = map[string]string{"ci_profile": profile}
         nodes = append(nodes, node)
     }

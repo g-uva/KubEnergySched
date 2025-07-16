@@ -2,18 +2,19 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
-	"flag"
 
-	"kube-scheduler/pkg/generator"
-	"kube-scheduler/ecsched"
 	"kube-scheduler/cisched"
+	"kube-scheduler/ecsched"
 	"kube-scheduler/k8sched"
+	"kube-scheduler/pkg/generator"
+	"kube-scheduler/pkg/loader"
 )
 
 // nodes returns the set of cluster nodes
@@ -77,12 +78,10 @@ func main() {
         }
     }
 
-    // Then pass nodesCSV and wlCSV into your existing loader routines:
-//     nodes := loadNodesFromCSV(nodesCSV)      // implement CSV reader + dynamic CI parser
-//     wls   := loadWorkloadsFromCSV(wlCSV)     // implement parser that sets Workload.Tag
+    nodes := loader.LoadNodesFromCSV(nodesCSV)
+    wls := loader.LoadWorkloadsFromCSV(wlCSV)
+	// wls := loadWorkloads("powertrace/data/powertrace.csv")
 
-
-	wls := loadWorkloads("powertrace/data/powertrace.csv")
 	base := fmt.Sprintf("results/%d_results", time.Now().Unix())
 	if err := os.MkdirAll(base, 0755); err != nil {
 		log.Fatal(err)
@@ -93,7 +92,7 @@ func main() {
 		run  func([]ecsched.Workload) []ecsched.LogEntry
 	}{
 		{"ecsched_baseline", func(w []ecsched.Workload) []ecsched.LogEntry {
-			s := ecsched.NewScheduler(nodes())
+			s := ecsched.NewScheduler(nodes)
 			for _, j := range w {
 				s.AddWorkload(j)
 			}
@@ -101,13 +100,13 @@ func main() {
 			return s.Logs
 		}},
 		{"ecsched_ci_aware", func(w []ecsched.Workload) []ecsched.LogEntry {
-			s := cisched.NewCIScheduler(nodes())
+			s := cisched.NewCIScheduler(nodes)
 			for _, j := range w { s.AddWorkload(j) }
 			s.Run()
 			return s.Logs()
 		}},
 		{"k8_heuristic", func(w []ecsched.Workload) []ecsched.LogEntry {
-			s := k8sched.NewK8Simulator(nodes())
+			s := k8sched.NewK8Simulator(nodes)
 			for _, j := range w { s.AddWorkload(j) }
 			s.Run()
 			return s.Logs()

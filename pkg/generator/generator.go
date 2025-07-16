@@ -50,7 +50,7 @@ func GenerateNodes(path string) error {
     w := csv.NewWriter(f)
     defer w.Flush()
 
-    // 3) Write your header and rows, checking each write
+    // 3) Write header and rows, checking each write
     if err := w.Write([]string{"name","cpu","mem","ci_profile"}); err != nil {
         return fmt.Errorf("writing header: %w", err)
     }
@@ -66,7 +66,7 @@ func GenerateNodes(path string) error {
     for i:=0; i<3; i++ {
         w.Write([]string{
             fmt.Sprintf("med-%d",i),
-            "8","16","static:150",  // you can add variation
+            "8","16","static:150",  // we can add variation
         })
     }
     // burstable: sine wave CI
