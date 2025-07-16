@@ -51,6 +51,7 @@ type LogEntry struct {
 	Start  time.Time
 	End    time.Time
 	WaitMS int64
+	CICost float64
 }
 
 type Reservation struct {
@@ -114,6 +115,7 @@ type DiscreteEventScheduler struct {
 	CIBaseWeight float64
 	CIDynAlpha float64
 	Pending 	[]Workload
+	ScheduleBatchSize int
 }
 
 type EventType int

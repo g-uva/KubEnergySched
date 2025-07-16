@@ -31,6 +31,14 @@ func (s *CIScheduler) Run() {
 	s.inner.Run()
 }
 
+func (s *CIScheduler) SetScheduleBatchSize(size int) {
+	s.inner.ScheduleBatchSize = size
+}
+
+func (s *CIScheduler) SetCIBaseWeight(weight float64) {
+	s.inner.CIBaseWeight = weight
+}
+
 // Logs exposes scheduling decisions
 func (s *CIScheduler) Logs() []ecsched.LogEntry {
 	return s.inner.Logs
