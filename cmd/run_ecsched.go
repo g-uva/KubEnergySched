@@ -78,7 +78,7 @@ func main() {
         }
     }
 
-    nodes := loader.LoadNodesFromCSV(nodesCSV)
+//     nodes := loader.LoadNodesFromCSV(nodesCSV)
     wls := loader.LoadWorkloadsFromCSV(wlCSV)
 	// wls := loadWorkloads("powertrace/data/powertrace.csv")
 
@@ -92,6 +92,7 @@ func main() {
 		run  func([]ecsched.Workload) []ecsched.LogEntry
 	}{
 		{"ecsched_baseline", func(w []ecsched.Workload) []ecsched.LogEntry {
+    			nodes := loader.LoadNodesFromCSV(nodesCSV)
 			s := ecsched.NewScheduler(nodes)
 			for _, j := range w {
 				s.AddWorkload(j)
@@ -100,12 +101,14 @@ func main() {
 			return s.Logs
 		}},
 		{"ecsched_ci_aware", func(w []ecsched.Workload) []ecsched.LogEntry {
+    			nodes := loader.LoadNodesFromCSV(nodesCSV)
 			s := cisched.NewCIScheduler(nodes)
 			for _, j := range w { s.AddWorkload(j) }
 			s.Run()
 			return s.Logs()
 		}},
 		{"k8_heuristic", func(w []ecsched.Workload) []ecsched.LogEntry {
+    			nodes := loader.LoadNodesFromCSV(nodesCSV)
 			s := k8sched.NewK8Simulator(nodes)
 			for _, j := range w { s.AddWorkload(j) }
 			s.Run()
