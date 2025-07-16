@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 	"kube-scheduler/ecsched"
+	"kube-scheduler/pkg/core"
 )
 
 // CIScheduler wraps DiscreteEventScheduler for CI-awareness
@@ -14,13 +15,13 @@ type CIScheduler struct {
 }
 
 // NewCIScheduler builds a CI-aware baseline (using MCFP)
-func NewCIScheduler(nodes []*ecsched.SimulatedNode) *CIScheduler {
+func NewCIScheduler(nodes []*core.SimulatedNode) *CIScheduler {
 	s := ecsched.NewScheduler(nodes)
 	return &CIScheduler{inner: s}
 }
 
 // AddWorkload forwards arrival
-func (s *CIScheduler) AddWorkload(w ecsched.Workload) {
+func (s *CIScheduler) AddWorkload(w core.Workload) {
 	s.inner.AddWorkload(w)
 }
 

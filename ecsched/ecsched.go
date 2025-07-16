@@ -1,11 +1,12 @@
 package ecsched
 
 import (
-	"container/list"
 	"log"
 	"math"
 	"sort"
 	"time"
+	metrics "kube-scheduler/metrics"
+	"kube-scheduler/pkg/core"
 )
 
 // SchedulerType selects algorithm for scheduling
@@ -21,28 +22,6 @@ const (
 	Swarm
 )
 
-// Workload represents a job to schedule
-type Workload struct {
-	ID         string
-	SubmitTime time.Time
-	Duration   time.Duration
-	CPU        float64
-	Memory     float64
-	Tag		 string
-}
-
-// SimulatedNode represents a cluster node
-type SimulatedNode struct {
-	Name            string
-	TotalCPU        float64
-	TotalMemory     float64
-	AvailableCPU    float64
-	AvailableMemory float64
-	CarbonIntensity float64    // gCO₂/kWh, static or TODO fetch
-	Reservations    *list.List // holds end-times for allocations
-	Metadata		map[string]string
-}
-
 // LogEntry captures one placement decision
 type LogEntry struct {
 	JobID  string
@@ -54,67 +33,16 @@ type LogEntry struct {
 	CICost float64
 }
 
-type Reservation struct {
-    endTime      time.Time
-    cpuReserved  float64
-    memReserved  float64
-}
-
-// NewNode constructs a SimulatedNode with capacity and CI
-func NewNode(name string, cpu, mem, ci float64) *SimulatedNode {
-	n := &SimulatedNode{
-		Name:            name,
-		TotalCPU:        cpu,
-		TotalMemory:     mem,
-		AvailableCPU:    cpu,
-		AvailableMemory: mem,
-		CarbonIntensity: ci,
-		Reservations:    list.New(),
-	}
-	return n
-}
-
-// CanAccept reports whether node has enough free resources
-func (n *SimulatedNode) CanAccept(w Workload) bool {
-	return n.AvailableCPU >= w.CPU && n.AvailableMemory >= w.Memory
-}
-
-// Reserve consumes capacity and records reservation end-time
-func (n *SimulatedNode) Reserve(w Workload, start time.Time) {
-    n.AvailableCPU    -= w.CPU
-    n.AvailableMemory -= w.Memory
-    n.Reservations.PushBack(&Reservation{
-        endTime:     start.Add(w.Duration),
-        cpuReserved: w.CPU,
-        memReserved: w.Memory,
-    })
-}
-
-// Release frees resources for all reservations ending <= t
-func (n *SimulatedNode) Release(t time.Time) {
-    for e := n.Reservations.Front(); e != nil; {
-        next := e.Next()
-        r := e.Value.(*Reservation)
-        if !r.endTime.After(t) {
-            // give back exactly what was reserved
-            n.AvailableCPU    = math.Min(n.AvailableCPU + r.cpuReserved,  n.TotalCPU)
-            n.AvailableMemory = math.Min(n.AvailableMemory + r.memReserved, n.TotalMemory)
-            n.Reservations.Remove(e)
-        }
-        e = next
-    }
-}
-
 // DiscreteEventScheduler drives simulation over events
 type DiscreteEventScheduler struct {
 	Clock     time.Time
-	Nodes     []*SimulatedNode
+	Nodes     []*core.SimulatedNode
 	Events    []Event
 	Logs      []LogEntry
 	SchedType SchedulerType
 	CIBaseWeight float64
 	CIDynAlpha float64
-	Pending 	[]Workload
+	Pending 	[]core.Workload
 	ScheduleBatchSize int
 }
 
@@ -127,12 +55,12 @@ const (
 type Event struct {
 	Time     time.Time
 	Type     EventType
-	Workload Workload
-	Node     *SimulatedNode
+	Workload core.Workload
+	Node     *core.SimulatedNode
 }
 
 // NewScheduler initializes with nodes and defaults to MCFP
-func NewScheduler(nodes []*SimulatedNode) *DiscreteEventScheduler {
+func NewScheduler(nodes []*core.SimulatedNode) *DiscreteEventScheduler {
 	return &DiscreteEventScheduler{
 		Clock:     time.Now(),
 		Nodes:     nodes,
@@ -145,7 +73,7 @@ func NewScheduler(nodes []*SimulatedNode) *DiscreteEventScheduler {
 }
 
 // AddWorkload enqueues arrival
-func (s *DiscreteEventScheduler) AddWorkload(w Workload) {
+func (s *DiscreteEventScheduler) AddWorkload(w core.Workload) {
 	s.Events = append(s.Events, Event{Time: w.SubmitTime, Type: JobArrival, Workload: w})
 }
 
@@ -174,7 +102,7 @@ func (s *DiscreteEventScheduler) processReleases(t time.Time) {
     }
 
     // 2) Try to schedule any pending workloads now that resources freed up
-    var stillPending []Workload
+    var stillPending []core.Workload
     for _, w := range s.Pending {
         if n := s.selectNode(w); n != nil {
             // Reserve resources at time t
@@ -189,6 +117,8 @@ func (s *DiscreteEventScheduler) processReleases(t time.Time) {
             })
 
             // Log with non-zero wait
+		//   ciCost := n.CarbonIntensity * w.Duration.Seconds()
+		  ciCost := metrics.ComputeCICost(n, w, s.Clock)
             s.Logs = append(s.Logs, LogEntry{
                 JobID:  w.ID,
                 Node:   n.Name,
@@ -196,6 +126,7 @@ func (s *DiscreteEventScheduler) processReleases(t time.Time) {
                 Start:  t,
                 End:    t.Add(w.Duration),
                 WaitMS: int64(t.Sub(w.SubmitTime) / time.Millisecond),
+			 CICost: ciCost,
             })
         } else {
             // Still can't fit, keep in pending queue
@@ -221,9 +152,11 @@ func (s *DiscreteEventScheduler) handleEvent(e Event) {
 	}
 }
 
-func (s *DiscreteEventScheduler) reserveAndLog(n *SimulatedNode, w Workload) {
+func (s *DiscreteEventScheduler) reserveAndLog(n *core.SimulatedNode, w core.Workload) {
 	n.Reserve(w, s.Clock)
 	s.Events = append(s.Events, Event{Time: s.Clock.Add(w.Duration), Type: JobEnd, Node: n, Workload: w})
+	// ciCost := n.CarbonIntensity * w.Duration.Seconds()
+	ciCost := metrics.ComputeCICost(n, w, s.Clock)
 	s.Logs = append(s.Logs, LogEntry{
 		JobID: w.ID,
 		Node: n.Name,
@@ -231,11 +164,12 @@ func (s *DiscreteEventScheduler) reserveAndLog(n *SimulatedNode, w Workload) {
 		Start: s.Clock,
 		End: s.Clock.Add(w.Duration),
 		WaitMS: int64(s.Clock.Sub(w.SubmitTime) / time.Millisecond),
+		CICost: ciCost,
 	})
 	log.Printf("Scheduled %s on %s at %v", w.ID, n.Name, s.Clock)
 }
 
-func (s *DiscreteEventScheduler) selectNode(w Workload) *SimulatedNode {
+func (s *DiscreteEventScheduler) selectNode(w core.Workload) *core.SimulatedNode {
 	switch s.SchedType {
 	case Kubernetes:
 		return s.scheduleKubernetes(w)
@@ -247,8 +181,8 @@ func (s *DiscreteEventScheduler) selectNode(w Workload) *SimulatedNode {
 	return nil
 }
 
-func (s *DiscreteEventScheduler) scheduleKubernetes(w Workload) *SimulatedNode {
-	cands := []*SimulatedNode{}
+func (s *DiscreteEventScheduler) scheduleKubernetes(w core.Workload) *core.SimulatedNode {
+	cands := []*core.SimulatedNode{}
 	for _, n := range s.Nodes {
 		if n.CanAccept(w) {
 			cands = append(cands, n)
@@ -268,8 +202,8 @@ func (s *DiscreteEventScheduler) scheduleKubernetes(w Workload) *SimulatedNode {
 	return cands[0]
 }
 
-func (s *DiscreteEventScheduler) scheduleSwarm(w Workload) *SimulatedNode {
-	cands := []*SimulatedNode{}
+func (s *DiscreteEventScheduler) scheduleSwarm(w core.Workload) *core.SimulatedNode {
+	cands := []*core.SimulatedNode{}
 	for _, n := range s.Nodes {
 		if n.CanAccept(w) {
 			cands = append(cands, n)
@@ -289,7 +223,7 @@ func (s *DiscreteEventScheduler) scheduleSwarm(w Workload) *SimulatedNode {
 	return cands[0]
 }
 
-func (s *DiscreteEventScheduler) scheduleMCFP(w Workload) *SimulatedNode {
+func (s *DiscreteEventScheduler) scheduleMCFP(w core.Workload) *core.SimulatedNode {
 	// 1) compute CI volatility
 	var sum, sumSq float64
 	for _, n := range s.Nodes {
@@ -305,7 +239,7 @@ func (s *DiscreteEventScheduler) scheduleMCFP(w Workload) *SimulatedNode {
 	dynWeight := s.CIBaseWeight * (1 + s.CIDynAlpha*(stddev/mean))
 
 	// 3) pick the node with minimal cost = −DP + dynWeight*CI
-	var best *SimulatedNode
+	var best *core.SimulatedNode
 	bestCost := math.MaxFloat64
 	for _, n := range s.Nodes {
 		if !n.CanAccept(w) {
@@ -326,8 +260,8 @@ func (s *DiscreteEventScheduler) scheduleMCFP(w Workload) *SimulatedNode {
 
 // // scheduleBatch is a helper to batch up workloads, build the flow network,
 // // solve MCFP once, and return a map of assignments.
-// func (s *DiscreteEventScheduler) scheduleBatch(ws []Workload) map[string]*SimulatedNode {
-// 	assign := make(map[string]*SimulatedNode)
+// func (s *DiscreteEventScheduler) scheduleBatch(ws []core.Workload) map[string]*core.SimulatedNode {
+// 	assign := make(map[string]*core.SimulatedNode)
 // 	// TODO: 1) build flow graph over ws and s.Nodes
 // 	//       2) run min-cost flow solver
 // 	//       3) extract mappings container->node into assign
@@ -401,7 +335,7 @@ func (s *DiscreteEventScheduler) scheduleMCFP(w Workload) *SimulatedNode {
 // 	}
 
 // 	// extract assignments
-// 	newPending := make([]Workload, 0, n)
+// 	newPending := make([]core.Workload, 0, n)
 // 	for i, w := range s.pending {
 // 		assigned := false
 // 		for _, e := range g.adj[workOff+i] {

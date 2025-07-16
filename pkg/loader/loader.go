@@ -9,7 +9,7 @@ import (
     "strings"
     "time"
 
-    "kube-scheduler/ecsched"
+    "kube-scheduler/pkg/core"
 )
 
 // loadNodesFromCSV parses a CSV of:
@@ -24,7 +24,7 @@ import (
 // For now we stow the profile string in the node’s Metadata
 // and set CarbonIntensity to the “mean” value; the CIScheduler
 // wrapper can look at Metadata to fetch a dynamic CI per tick.
-func LoadNodesFromCSV(path string) []*ecsched.SimulatedNode {
+func LoadNodesFromCSV(path string) []*core.SimulatedNode {
     f, err := os.Open(path)
     if err != nil {
         log.Fatalf("LoadNodesFromCSV: open %s: %v", path, err)
@@ -37,7 +37,7 @@ func LoadNodesFromCSV(path string) []*ecsched.SimulatedNode {
         log.Fatalf("LoadNodesFromCSV: read header: %v", err)
     }
 
-    var nodes []*ecsched.SimulatedNode
+    var nodes []*core.SimulatedNode
     for {
         rec, err := r.Read()
         if err == io.EOF {
@@ -70,7 +70,7 @@ func LoadNodesFromCSV(path string) []*ecsched.SimulatedNode {
             log.Printf("LoadNodesFromCSV: unknown ci_profile %q, defaulting to 0", profile)
         }
 
-        node := ecsched.NewNode(name, float64(cpu), float64(mem), baseCI)
+        node := core.NewNode(name, float64(cpu), float64(mem), baseCI)
         // stash the profile string for my CI‐aware wrapper:
         node.Metadata = map[string]string{"ci_profile": profile}
         nodes = append(nodes, node)
@@ -84,7 +84,7 @@ func LoadNodesFromCSV(path string) []*ecsched.SimulatedNode {
 //
 // and returns a slice of Workload with SubmitTime, Duration,
 // CPU, Memory and Tag populated.
-func LoadWorkloadsFromCSV(path string) []ecsched.Workload {
+func LoadWorkloadsFromCSV(path string) []core.Workload {
     f, err := os.Open(path)
     if err != nil {
         log.Fatalf("LoadWorkloadsFromCSV: open %s: %v", path, err)
@@ -97,7 +97,7 @@ func LoadWorkloadsFromCSV(path string) []ecsched.Workload {
         log.Fatalf("LoadWorkloadsFromCSV: read header: %v", err)
     }
 
-    var wls []ecsched.Workload
+    var wls []core.Workload
     for {
         rec, err := r.Read()
         if err == io.EOF {
@@ -115,7 +115,7 @@ func LoadWorkloadsFromCSV(path string) []ecsched.Workload {
             tag = rec[5]
         }
 
-        wls = append(wls, ecsched.Workload{
+        wls = append(wls, core.Workload{
             ID:         id,
             SubmitTime: submit,
             Duration:   time.Duration(durSec) * time.Second,

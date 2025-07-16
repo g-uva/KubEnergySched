@@ -6,12 +6,12 @@ import (
 )
 
 type SchedulingStrategy interface {
-	SelectCluster([]Cluster, Workload) (Cluster, string, error)
+	SelectCluster([]Cluster, WorkloadTestbed) (Cluster, string, error)
 }
 
 type FCFS struct{}
 
-func (s FCFS) SelectCluster(clusters []Cluster, w Workload) (Cluster, string, error) {
+func (s FCFS) SelectCluster(clusters []Cluster, w WorkloadTestbed) (Cluster, string, error) {
 	n := len(clusters)
 	for i := 0; i < n; i++ {
 		c := clusters[i]
@@ -26,7 +26,7 @@ type RoundRobin struct {
 	counter int
 }
 
-func (s *RoundRobin) SelectCluster(clusters []Cluster, w Workload) (Cluster, string, error) {
+func (s *RoundRobin) SelectCluster(clusters []Cluster, w WorkloadTestbed) (Cluster, string, error) {
 	n := len(clusters)
 	for i := 0; i < n; i++ {
 		c := clusters[(s.counter+i)%n]
@@ -40,7 +40,7 @@ func (s *RoundRobin) SelectCluster(clusters []Cluster, w Workload) (Cluster, str
 
 type MinMin struct{}
 
-func (s MinMin) SelectCluster(clusters []Cluster, w Workload) (Cluster, string, error) {
+func (s MinMin) SelectCluster(clusters []Cluster, w WorkloadTestbed) (Cluster, string, error) {
 	var best Cluster
 	minCost := 1e9
 	n := len(clusters)
@@ -62,7 +62,7 @@ func (s MinMin) SelectCluster(clusters []Cluster, w Workload) (Cluster, string, 
 
 type MaxMin struct{}
 
-func (s MaxMin) SelectCluster(clusters []Cluster, w Workload) (Cluster, string, error) {
+func (s MaxMin) SelectCluster(clusters []Cluster, w WorkloadTestbed) (Cluster, string, error) {
 	var best Cluster
 	maxCost := -1.0
 	n := len(clusters)
@@ -84,7 +84,7 @@ func (s MaxMin) SelectCluster(clusters []Cluster, w Workload) (Cluster, string, 
 
 type EnergyAwareStrategy struct{}
 
-func (s EnergyAwareStrategy) SelectCluster(clusters []Cluster, w Workload) (Cluster, string, error) {
+func (s EnergyAwareStrategy) SelectCluster(clusters []Cluster, w WorkloadTestbed) (Cluster, string, error) {
 	var best Cluster
 	minCost := 1e9
 	n := len(clusters)
@@ -107,7 +107,7 @@ func (s EnergyAwareStrategy) SelectCluster(clusters []Cluster, w Workload) (Clus
 
 type CIawareStrategy struct{}
 
-func (s CIawareStrategy) SelectCluster(clusters []Cluster, w Workload) (Cluster, string, error) {
+func (s CIawareStrategy) SelectCluster(clusters []Cluster, w WorkloadTestbed) (Cluster, string, error) {
 	var best Cluster
 	lowestScore := 1e9
 	reason := ""

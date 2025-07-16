@@ -3,6 +3,7 @@ package k8sched
 import (
 	"log"
 	"kube-scheduler/ecsched"
+	"kube-scheduler/pkg/core"
 )
 
 // K8Simulator simulates Kubernetes scheduling
@@ -12,14 +13,14 @@ type K8Simulator struct {
 }
 
 // NewK8Simulator constructs a Kubernetes heuristic simulator
-func NewK8Simulator(nodes []*ecsched.SimulatedNode) *K8Simulator {
+func NewK8Simulator(nodes []*core.SimulatedNode) *K8Simulator {
 	s := ecsched.NewScheduler(nodes)
 	s.SchedType = ecsched.Kubernetes
 	return &K8Simulator{inner: s}
 }
 
 // AddWorkload forwards arrival
-func (s *K8Simulator) AddWorkload(w ecsched.Workload) {
+func (s *K8Simulator) AddWorkload(w core.Workload) {
 	s.inner.AddWorkload(w)
 }
 

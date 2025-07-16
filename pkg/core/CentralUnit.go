@@ -34,7 +34,7 @@ var allStrategies = []SchedulingStrategy{
 
 var decisionLog []SchedulingDecision
 
-func (cu CentralUnit) Dispatch(workloads []Workload) {
+func (cu CentralUnit) Dispatch(workloads []WorkloadTestbed) {
 	n := len(workloads)
 	for i := 0; i < n; i++ {
 		w := workloads[i]
@@ -57,7 +57,7 @@ func (cu CentralUnit) Dispatch(workloads []Workload) {
 	}
 }
 
-func (cu CentralUnit) DispatchAll(workloads []Workload) {
+func (cu CentralUnit) DispatchAll(workloads []WorkloadTestbed) {
 	for _, strategy := range allStrategies {
 		fmt.Printf("\n=== Running strategy: %s ===\n", reflect.TypeOf(strategy).Name())
 		for _, w := range workloads {

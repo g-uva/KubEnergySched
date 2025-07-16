@@ -16,6 +16,7 @@ import (
 	"kube-scheduler/k8sched"
 	"kube-scheduler/pkg/generator"
 	"kube-scheduler/pkg/loader"
+	"kube-scheduler/pkg/core"
 )
 
 // parseFloatSlice converts a comma-separated list of floats into a slice
@@ -104,9 +105,9 @@ func main() {
 			// Define scheduler specs
 			specs := []struct {
 				name string
-				run  func([]ecsched.Workload) ([]ecsched.LogEntry, float64)
+				run  func([]core.Workload) ([]ecsched.LogEntry, float64)
 			}{
-				{"baseline", func(w []ecsched.Workload) ([]ecsched.LogEntry, float64) {
+				{"baseline", func(w []core.Workload) ([]ecsched.LogEntry, float64) {
 					nodes := loader.LoadNodesFromCSV(nodesCSV)
 					s := ecsched.NewScheduler(nodes)
 					s.ScheduleBatchSize = bs
@@ -119,7 +120,7 @@ func main() {
 					return s.Logs, float64(time.Since(start).Milliseconds())
 				}},
 
-				{"ci_aware", func(w []ecsched.Workload) ([]ecsched.LogEntry, float64) {
+				{"ci_aware", func(w []core.Workload) ([]ecsched.LogEntry, float64) {
 					nodes := loader.LoadNodesFromCSV(nodesCSV)
 					s := cisched.NewCIScheduler(nodes)
 					s.SetScheduleBatchSize(bs)
@@ -132,7 +133,7 @@ func main() {
 					return s.Logs(), float64(time.Since(start).Milliseconds())
 				}},
 
-				{"k8", func(w []ecsched.Workload) ([]ecsched.LogEntry, float64) {
+				{"k8", func(w []core.Workload) ([]ecsched.LogEntry, float64) {
 					nodes := loader.LoadNodesFromCSV(nodesCSV)
 					s := k8sched.NewK8Simulator(nodes)
 					s.SetScheduleBatchSize(bs)

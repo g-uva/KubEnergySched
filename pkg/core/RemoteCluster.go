@@ -19,7 +19,7 @@ type RemoteCluster struct {
 
 func (c RemoteCluster) Name() string { return c.NameKey }
 
-func (c RemoteCluster) CanAccept(w Workload) bool {
+func (c RemoteCluster) CanAccept(w WorkloadTestbed) bool {
 	fmt.Printf("[RemoteCluster %s] Sending POST to %s/metrics...\n", c.Name(), c.MetricsURL)
 	cpu, err := c.GetMetricValue("compute_node_cpu_usage")
 	if err != nil {
@@ -31,12 +31,12 @@ func (c RemoteCluster) CanAccept(w Workload) bool {
 	return cpu < 90.0
 }
 
-func (c RemoteCluster) EstimateEnergyCost(w Workload) float64 {
+func (c RemoteCluster) EstimateEnergyCost(w WorkloadTestbed) float64 {
 	// Simplified: base cost = CPU × 1.0
 	return float64(w.CPURequirement)
 }
 
-func (c RemoteCluster) SubmitJob(w Workload) error {
+func (c RemoteCluster) SubmitJob(w WorkloadTestbed) error {
 	fmt.Println("RemoteCluster.SubmitJob was called. Workload ID:", w.ID)
 	payload := map[string]any{
 		"id": w.ID,
