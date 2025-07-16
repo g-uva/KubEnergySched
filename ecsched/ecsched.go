@@ -50,6 +50,13 @@ type LogEntry struct {
 	Submit time.Time
 	Start  time.Time
 	End    time.Time
+	WaitMS int64
+}
+
+type Reservation struct {
+    endTime      time.Time
+    cpuReserved  float64
+    memReserved  float64
 }
 
 // NewNode constructs a SimulatedNode with capacity and CI
@@ -73,24 +80,28 @@ func (n *SimulatedNode) CanAccept(w Workload) bool {
 
 // Reserve consumes capacity and records reservation end-time
 func (n *SimulatedNode) Reserve(w Workload, start time.Time) {
-	n.AvailableCPU -= w.CPU
-	n.AvailableMemory -= w.Memory
-	n.Reservations.PushBack(start.Add(w.Duration))
+    n.AvailableCPU    -= w.CPU
+    n.AvailableMemory -= w.Memory
+    n.Reservations.PushBack(&Reservation{
+        endTime:     start.Add(w.Duration),
+        cpuReserved: w.CPU,
+        memReserved: w.Memory,
+    })
 }
 
 // Release frees resources for all reservations ending <= t
 func (n *SimulatedNode) Release(t time.Time) {
-	for e := n.Reservations.Front(); e != nil; {
-		next := e.Next()
-		end := e.Value.(time.Time)
-		if !end.After(t) {
-			// approximate full release; TODO: track per-job
-			n.AvailableCPU = math.Min(n.AvailableCPU+wPlaceholderCPU, n.TotalCPU)
-			n.AvailableMemory = math.Min(n.AvailableMemory+wPlaceholderMem, n.TotalMemory)
-			n.Reservations.Remove(e)
-		}
-		e = next
-	}
+    for e := n.Reservations.Front(); e != nil; {
+        next := e.Next()
+        r := e.Value.(*Reservation)
+        if !r.endTime.After(t) {
+            // give back exactly what was reserved
+            n.AvailableCPU    = math.Min(n.AvailableCPU + r.cpuReserved,  n.TotalCPU)
+            n.AvailableMemory = math.Min(n.AvailableMemory + r.memReserved, n.TotalMemory)
+            n.Reservations.Remove(e)
+        }
+        e = next
+    }
 }
 
 // DiscreteEventScheduler drives simulation over events
@@ -102,6 +113,7 @@ type DiscreteEventScheduler struct {
 	SchedType SchedulerType
 	CIBaseWeight float64
 	CIDynAlpha float64
+	Pending 	[]Workload
 }
 
 type EventType int
@@ -154,10 +166,43 @@ func (s *DiscreteEventScheduler) sortEvents() {
 }
 
 func (s *DiscreteEventScheduler) processReleases(t time.Time) {
-	for _, n := range s.Nodes {
-		n.Release(t)
-	}
+    // 1) Free up any reservations whose endTime ≤ t
+    for _, n := range s.Nodes {
+        n.Release(t)
+    }
+
+    // 2) Try to schedule any pending workloads now that resources freed up
+    var stillPending []Workload
+    for _, w := range s.Pending {
+        if n := s.selectNode(w); n != nil {
+            // Reserve resources at time t
+            n.Reserve(w, t)
+
+            // Enqueue the JobEnd event for this backfilled job
+            s.Events = append(s.Events, Event{
+                Time:     t.Add(w.Duration),
+                Type:     JobEnd,
+                Node:     n,
+                Workload: w,
+            })
+
+            // Log with non-zero wait
+            s.Logs = append(s.Logs, LogEntry{
+                JobID:  w.ID,
+                Node:   n.Name,
+                Submit: w.SubmitTime,
+                Start:  t,
+                End:    t.Add(w.Duration),
+                WaitMS: int64(t.Sub(w.SubmitTime) / time.Millisecond),
+            })
+        } else {
+            // Still can't fit, keep in pending queue
+            stillPending = append(stillPending, w)
+        }
+    }
+    s.Pending = stillPending
 }
+
 
 func (s *DiscreteEventScheduler) handleEvent(e Event) {
 	switch e.Type {
@@ -166,6 +211,7 @@ func (s *DiscreteEventScheduler) handleEvent(e Event) {
 		if node != nil {
 			s.reserveAndLog(node, e.Workload)
 		} else {
+			s.Pending = append(s.Pending, e.Workload)
 			log.Printf("Job %s could not be scheduled", e.Workload.ID)
 		}
 	case JobEnd:
@@ -176,7 +222,14 @@ func (s *DiscreteEventScheduler) handleEvent(e Event) {
 func (s *DiscreteEventScheduler) reserveAndLog(n *SimulatedNode, w Workload) {
 	n.Reserve(w, s.Clock)
 	s.Events = append(s.Events, Event{Time: s.Clock.Add(w.Duration), Type: JobEnd, Node: n, Workload: w})
-	s.Logs = append(s.Logs, LogEntry{JobID: w.ID, Node: n.Name, Submit: w.SubmitTime, Start: s.Clock, End: s.Clock.Add(w.Duration)})
+	s.Logs = append(s.Logs, LogEntry{
+		JobID: w.ID,
+		Node: n.Name,
+		Submit: w.SubmitTime,
+		Start: s.Clock,
+		End: s.Clock.Add(w.Duration),
+		WaitMS: int64(s.Clock.Sub(w.SubmitTime) / time.Millisecond),
+	})
 	log.Printf("Scheduled %s on %s at %v", w.ID, n.Name, s.Clock)
 }
 
@@ -267,12 +320,6 @@ func (s *DiscreteEventScheduler) scheduleMCFP(w Workload) *SimulatedNode {
 	}
 	return best
 }
-
-// placeholders until per-job resource is tracked on release
-const (
-	wPlaceholderCPU = 0.0
-	wPlaceholderMem = 0.0
-)
 
 
 // // scheduleBatch is a helper to batch up workloads, build the flow network,
