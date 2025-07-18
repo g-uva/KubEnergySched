@@ -24,7 +24,7 @@ func handleWorkloadIngest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go unit.DispatchAll([]core.Workload{job})
+	go unit.DispatchAll([]core.WorkloadTestbed{job})
 	w.WriteHeader(http.StatusOK)
 	fmt.Printf("[CentralUnit] Ingested job: %s\n", job.ID)
 
