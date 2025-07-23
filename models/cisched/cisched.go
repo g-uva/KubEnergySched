@@ -2,7 +2,7 @@ package cisched
 
 import (
 	"log"
-	"time"
+	// "time"
 	"kube-scheduler/models/ecsched"
 	"kube-scheduler/pkg/core"
 )
@@ -28,7 +28,7 @@ func (s *CIScheduler) AddWorkload(w core.Workload) {
 // Run fetches CI metrics (TODO) then executes scheduling
 func (s *CIScheduler) Run() {
 	log.Print("[CIScheduler] fetching CI metrics... (TODO)")
-	time.Sleep(10 * time.Millisecond)
+	// time.Sleep(10 * time.Millisecond) // No need to simulate this.
 	s.inner.Run()
 }
 

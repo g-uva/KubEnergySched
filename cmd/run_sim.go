@@ -111,7 +111,7 @@ func main() {
 					nodes := loader.LoadNodesFromCSV(nodesCSV)
 					s := ecsched.NewScheduler(nodes)
 					s.ScheduleBatchSize = bs
-					s.CIBaseWeight = ciW
+					s.CIBaseWeight = 0.0
 					for _, j := range w {
 						s.AddWorkload(j)
 					}

@@ -102,7 +102,7 @@ func NewScheduler(nodes []*core.SimulatedNode) *DiscreteEventScheduler {
 		Events:            []Event{},
 		Logs:              []LogEntry{},
 		SchedType:         MCFP,
-		CIBaseWeight:      0.1,
+		CIBaseWeight:      0.0,				// This is set to 0.0 by default for simulation.
 		CIDynAlpha:        1.0,
 		ScheduleBatchSize: 1,
 		Pending:           []core.Workload{},
