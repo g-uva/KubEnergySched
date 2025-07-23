@@ -5,7 +5,7 @@ import (
 	"math"
 	"sort"
 	"time"
-	metrics "kube-scheduler/metrics"
+	metrics "kube-scheduler/pkg/metrics"
 	"kube-scheduler/pkg/core"
 )
 
