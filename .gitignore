@@ -12,3 +12,6 @@ bin/
 etc/
 lib/
 lib64/
+fabric_python/include/
+fabric_python/share/
+.ssh/
