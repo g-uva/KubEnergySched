@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"kube-scheduler/cisched"
-	"kube-scheduler/ecsched"
-	"kube-scheduler/k8sched"
+	"kube-scheduler/models/cisched"
+	"kube-scheduler/models/ecsched"
+	"kube-scheduler/models/k8sched"
 	"kube-scheduler/pkg/generator"
 	"kube-scheduler/pkg/loader"
 	"kube-scheduler/pkg/core"

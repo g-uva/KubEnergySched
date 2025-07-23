@@ -3,7 +3,7 @@ package cisched
 import (
 	"log"
 	"time"
-	"kube-scheduler/ecsched"
+	"kube-scheduler/models/ecsched"
 	"kube-scheduler/pkg/core"
 )
 

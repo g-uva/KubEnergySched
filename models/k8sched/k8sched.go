@@ -2,7 +2,7 @@ package k8sched
 
 import (
 	"log"
-	"kube-scheduler/ecsched"
+	"kube-scheduler/models/ecsched"
 	"kube-scheduler/pkg/core"
 )
 
