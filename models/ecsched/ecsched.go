@@ -247,12 +247,12 @@ func (s *DiscreteEventScheduler) scheduleBatch() {
 
 func (s *DiscreteEventScheduler) selectNode(w core.Workload) *core.SimulatedNode {
 	switch s.SchedType {
-	case Kubernetes:
-		return s.scheduleKubernetes(w)
-	case Swarm:
-		return s.scheduleSwarm(w)
-	case MCFP:
-		return s.scheduleMCFP(w)
+		case Kubernetes:
+			return s.scheduleKubernetes(w)
+		case Swarm:
+			return s.scheduleSwarm(w)
+		case MCFP:
+			return s.scheduleMCFP(w)
 	}
 	return nil
 }
