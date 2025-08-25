@@ -3,7 +3,7 @@ package core
 import "time"
 
 type Reservation struct {
-    endTime      time.Time
-    cpuReserved  float64
-    memReserved  float64
+	End time.Time
+	CPU float64
+	Mem float64
 }

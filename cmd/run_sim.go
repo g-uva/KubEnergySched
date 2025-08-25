@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"kube-scheduler/models/carbonscaler"
 	"kube-scheduler/models/cisched"
 	"kube-scheduler/models/k8sched"
 	"kube-scheduler/pkg/core"
@@ -106,18 +107,66 @@ func main() {
 				name string
 				run  func([]core.Workload) ([]core.LogEntry, float64)
 			}{
-				// {"baseline", func(w []core.Workload) ([]core.LogEntry, float64) {
-				// 	nodes := loader.LoadNodesFromCSV(nodesCSV)
-				// 	s := ecsched.NewScheduler(nodes)
-				// 	s.ScheduleBatchSize = bs
-				// 	s.CIBaseWeight = 0.0
-				// 	for _, j := range w {
-				// 		s.AddWorkload(j)
-				// 	}
-				// 	start := time.Now()
-				// 	s.Run()
-				// 	return s.Logs, float64(time.Since(start).Milliseconds())
-				// }},
+				{
+					name: "carbonscaler",
+					run: func(jobs []core.Workload) ([]core.LogEntry, float64) {
+						nodes := loader.LoadNodesFromCSV(nodesCSV)
+						s := carbonscaler.NewCarbonScaler(
+							nodes, carbonscaler.Config{
+								Lambda: ciW,
+							},
+						)
+						s.SetScheduleBatchSize(bs)
+						for _, j := range jobs {
+							s.AddWorkload(j)
+						}
+						t := time.Now()
+						s.Run()
+						return s.Logs(), float64(time.Since(t).Milliseconds())
+					},
+				},
+				// {
+				// 	name: "greenalg",
+				// 	run: func(jobs []core.Workload) ([]core.LogEntry, float64) {
+				// 		nodes := loader.LoadNodesFromCSV(nodesCSV)
+				// 		s := greenalg.NewGreenAlgorithms(nodes, greenalg.Config{W: greenalg.Weights{CI: 1.0, Dur: 0.2, Energy: 0.5}})
+				// 		s.SetScheduleBatchSize(bs)
+				// 		for _, j := range jobs {
+				// 			s.AddWorkload(j)
+				// 		}
+				// 		t := time.Now()
+				// 		s.Run()
+				// 		return s.Logs(), float64(time.Since(t).Milliseconds())
+				// 	},
+				// },
+				// {
+				// 	name: "ecovisor",
+				// 	run: func(jobs []core.Workload) ([]core.LogEntry, float64) {
+				// 		nodes := loader.LoadNodesFromCSV(nodesCSV)
+				// 		s := ecovisor.NewEcovisor(nodes, ecovisor.Config{W: ecovisor.Weights{SCI: 1.0, PUE: 0.3, Delay: 0.2}})
+				// 		s.SetScheduleBatchSize(bs)
+				// 		for _, j := range jobs {
+				// 			s.AddWorkload(j)
+				// 		}
+				// 		t := time.Now()
+				// 		s.Run()
+				// 		return s.Logs(), float64(time.Since(t).Milliseconds())
+				// 	},
+				// },
+				// {
+				// 	name: "energyvis",
+				// 	run: func(jobs []core.Workload) ([]core.LogEntry, float64) {
+				// 		nodes := loader.LoadNodesFromCSV(nodesCSV)
+				// 		s := energyvis.NewEnergyVis(nodes, energyvis.Config{W: energyvis.Weights{Power: 1.0, SCI: 0.3, Util: 0.2}})
+				// 		s.SetScheduleBatchSize(bs)
+				// 		for _, j := range jobs {
+				// 			s.AddWorkload(j)
+				// 		}
+				// 		t := time.Now()
+				// 		s.Run()
+				// 		return s.Logs(), float64(time.Since(t).Milliseconds())
+				// 	},
+				// },
 
 				{"ci_aware", func(w []core.Workload) ([]core.LogEntry, float64) {
 					nodes := loader.LoadNodesFromCSV(nodesCSV)

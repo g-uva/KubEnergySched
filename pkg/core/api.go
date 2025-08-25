@@ -5,6 +5,7 @@ type Node struct {
 	CPUCap  float64
 	MemCap  float64
 	Metrics map[string]float64
+	Labels  map[string]string
 }
 type Job struct {
 	ID         string
