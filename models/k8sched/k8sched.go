@@ -1,44 +1,68 @@
 package k8sched
 
 import (
-	"kube-scheduler/models/ecsched"
+	"context"
+	"math"
+	"time"
+
 	"kube-scheduler/pkg/core"
-	"log"
+	"kube-scheduler/pkg/metrics"
 )
 
-// K8Simulator simulates Kubernetes scheduling
+type policy struct{}
+func (p *policy) Name() string { return "k8" }
+func (p *policy) Score(_ context.Context, w core.Workload, nodes []core.SimulatedNode) (core.Scores, error) {
+	sc := core.Scores{}
+	for _, n := range nodes {
+		if !n.CanAccept(w) { continue }
+		used := (n.TotalCPU-n.AvailableCPU)/n.TotalCPU + (n.TotalMemory-n.AvailableMemory)/n.TotalMemory
+		sc[n.ID] = used
+	}
+	if len(sc) == 0 { sc[""] = math.Inf(1) }
+	return sc, nil
+}
+func (p *policy) Select(sc core.Scores) (string, bool) { return core.ArgMin(sc) }
 
-type K8Simulator struct {
-	inner *ecsched.DiscreteEventScheduler
+type Simulator struct {
+	base core.BaseSim
+	pol  *policy
 }
 
-// NewK8Simulator constructs a Kubernetes heuristic simulator
-func NewK8Simulator(nodes []*core.SimulatedNode) *K8Simulator {
-	s := ecsched.NewScheduler(nodes)
-	s.SchedType = ecsched.Kubernetes
-	return &K8Simulator{inner: s}
+func NewK8sSimulator(nodes []*core.SimulatedNode) *Simulator {
+	s := &Simulator{pol: &policy{}}
+	s.base.Init(nodes)
+	s.base.Select = func(w core.Workload, sims []*core.SimulatedNode) *core.SimulatedNode {
+		view := make([]core.SimulatedNode, 0, len(sims))
+		for _, n := range sims { view = append(view, *n) }
+		sc, _ := s.pol.Score(context.Background(), core.Workload{
+			ID: w.ID, CPU: w.CPU, Memory: w.Memory, Duration: w.Duration,
+		}, view)
+		if id, ok := s.pol.Select(sc); ok {
+			for _, n := range sims {
+				if n.Name == id && n.CanAccept(w) {
+					start := s.base.Clock
+					n.Reserve(w, start)
+					end := start.Add(w.Duration)
+					ci := metrics.ComputeCICost(n, core.Workload{
+						ID: w.ID, CPU: w.CPU, Memory: w.Memory, Duration: w.Duration,
+					}, start)
+					s.base.LogsBuf = append(s.base.LogsBuf, core.LogEntry{
+						JobID: w.ID, Node: n.Name,
+						Submit: w.SubmitTime, Start: start, End: end,
+						WaitMS: int64(start.Sub(w.SubmitTime)/time.Millisecond),
+						CICost: ci,
+					})
+					return n
+				}
+			}
+		}
+		return nil
+	}
+	return s
 }
 
-// AddWorkload forwards arrival
-func (s *K8Simulator) AddWorkload(w core.Workload) {
-	s.inner.AddWorkload(w)
-}
-
-// Run executes heuristic
-func (s *K8Simulator) Run() {
-	log.Print("[K8Simulator] running Kubernetes heuristic...")
-	s.inner.Run()
-}
-
-func (s *K8Simulator) SetScheduleBatchSize(size int) {
-	s.inner.ScheduleBatchSize = size
-}
-
-// func (s *K8Simulator) SetCIBaseWeight(weight float64) {
-// 	s.inner.CIBaseWeight = weight
-// }
-
-// Logs exposes decisions
-func (s *K8Simulator) Logs() []core.LogEntry {
-	return s.inner.Logs
-}
+// adapters
+func (s *Simulator) SetScheduleBatchSize(n int)  { s.base.SetScheduleBatchSize(n) }
+func (s *Simulator) AddWorkload(j core.Workload) { s.base.AddWorkload(j) }
+func (s *Simulator) Run()                        { s.base.Run() }
+func (s *Simulator) Logs() []core.LogEntry       { return s.base.Logs() }

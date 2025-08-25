@@ -6,6 +6,7 @@ import (
 )
 
 type SimulatedNode struct {
+	ID			 string
 	Name            string
 	TotalCPU        float64
 	TotalMemory     float64

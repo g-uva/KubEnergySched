@@ -12,6 +12,7 @@ type Workload struct {
 	CPU        float64
 	Memory     float64
 	Tag		 string
+	Labels	 map[string]string
 }
 
 type WorkloadTestbed struct {

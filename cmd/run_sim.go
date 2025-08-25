@@ -170,7 +170,10 @@ func main() {
 
 				{"ci_aware", func(w []core.Workload) ([]core.LogEntry, float64) {
 					nodes := loader.LoadNodesFromCSV(nodesCSV)
-					s := cisched.NewCIScheduler(nodes)
+					s := cisched.NewCIScheduler(
+						nodes,
+						cisched.Config{W: cisched.Weights{Carbon: ciW, Wait: 1.0, Queue: 0.0, Price: 0.0, Repro: 0.0}},
+					)
 					s.SetScheduleBatchSize(bs)
 					// s.SetCIBaseWeight(ciW)
 					for _, j := range w {
@@ -183,7 +186,7 @@ func main() {
 
 				{"k8", func(w []core.Workload) ([]core.LogEntry, float64) {
 					nodes := loader.LoadNodesFromCSV(nodesCSV)
-					s := k8sched.NewK8Simulator(nodes)
+					s := k8sched.NewK8sSimulator(nodes)
 					s.SetScheduleBatchSize(bs)
 					// s.SetCIBaseWeight(ciW)
 					for _, j := range w {

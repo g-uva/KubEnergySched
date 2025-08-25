@@ -14,24 +14,18 @@ import (
 //  2) an energy model: node peak power × CPU share × duration
 //  3) unit conversions (W→kWh, then × gCO₂/kWh)
 func ComputeCICost(n *core.SimulatedNode, w core.Workload, t time.Time) float64 {
-    // 1) Get instantaneous grid CI (gCO₂/kWh)
-    ci := currentCI(n, t)
+	ci := currentCI(n, t) // gCO2/kWh
 
-    // 2) Estimate power draw (Watts)
-    //    Assume node.Metadata["peak_power_w"] holds its max power in W
-    pPeak, err := strconv.ParseFloat(n.Metadata["peak_power_w"], 64)
-    if err != nil || pPeak <= 0 {
-        // fallback to a default, e.g. 400 W
-        pPeak = 400.0
-    }
-    // fraction of CPU it uses
-    cpuFrac := w.CPU / n.TotalCPU
-
-    // 3) Compute energy in kWh: (W × s) / 3600
-    energyKWh := (pPeak * cpuFrac * w.Duration.Seconds()) / 3600.0
-
-    // 4) Carbon cost = energy × CI
-    return energyKWh * ci
+	pPeak, err := strconv.ParseFloat(n.Metadata["peak_power_w"], 64)
+	if err != nil || pPeak <= 0 {
+		pPeak = 400.0
+	}
+	cpuFrac := 0.0
+	if n.TotalCPU > 0 {
+		cpuFrac = w.CPU / n.TotalCPU
+	}
+	energyKWh := (pPeak * cpuFrac * math.Max(w.Duration.Seconds(), 0.0)) / 3600.0
+	return energyKWh * ci
 }
 
 // currentCI parses the node’s ci_profile metadata and returns the
@@ -40,24 +34,25 @@ func ComputeCICost(n *core.SimulatedNode, w core.Workload, t time.Time) float64 
 //   sine:<mean>:<amp>:<periodSec>
 //   randwalk:<min>:<max>:<stepSec>  (uses n.CarbonIntensity as last value)
 func currentCI(n *core.SimulatedNode, t time.Time) float64 {
-    prof := n.Metadata["ci_profile"]
-    parts := strings.Split(prof, ":")
-    switch parts[0] {
-    case "static":
-        v, _ := strconv.ParseFloat(parts[1], 64)
-        return v
-    case "sine":
-        // sine:<mean>:<amp>:<periodSec>
-        mean, _ := strconv.ParseFloat(parts[1], 64)
-        amp, _  := strconv.ParseFloat(parts[2], 64)
-        period, _ := strconv.ParseInt(parts[3], 10, 64)
-        θ := 2*math.Pi*float64(t.Unix()%period) / float64(period)
-        return mean + amp*math.Sin(θ)
-    case "randwalk":
-        // assume inner scheduler has updated n.CarbonIntensity at each tick
-        return n.CarbonIntensity
-    default:
-        // last‐resort: use whatever was in the node struct
-        return n.CarbonIntensity
-    }
+	prof := n.Metadata["ci_profile"]
+	parts := strings.Split(prof, ":")
+	switch parts[0] {
+	case "static":
+		v, _ := strconv.ParseFloat(parts[1], 64)
+		return v
+	case "sine":
+		mean, _ := strconv.ParseFloat(parts[1], 64)
+		amp, _ := strconv.ParseFloat(parts[2], 64)
+		periodSec, _ := strconv.ParseInt(parts[3], 10, 64)
+		if periodSec <= 0 {
+			return mean
+		}
+		theta := 2 * math.Pi * float64(t.Unix()%periodSec) / float64(periodSec)
+		return mean + amp*math.Sin(theta)
+	case "randwalk":
+		return n.CarbonIntensity
+	default:
+		return n.CarbonIntensity
+	}
 }
+

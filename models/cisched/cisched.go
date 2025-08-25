@@ -1,45 +1,82 @@
 package cisched
 
 import (
-	"kube-scheduler/models/ecsched"
+	"context"
+	"time"
+
 	"kube-scheduler/pkg/core"
-	"log"
+	"kube-scheduler/pkg/metrics"
 )
 
-// CIScheduler wraps DiscreteEventScheduler for CI-awareness
-// TODO: inject actual CI client
+type Weights struct {
+	Carbon float64
+	Wait   float64
+	Queue  float64
+	Price  float64
+	Repro  float64
+}
+type Config struct{ W Weights }
 
-type CIScheduler struct {
-	inner *ecsched.DiscreteEventScheduler
+type policy struct{ W Weights }
+func (p *policy) Name() string { return "ci_aware" }
+
+func (p *policy) Score(_ context.Context, w core.Workload, nodes []core.SimulatedNode) (core.Scores, error) {
+	sc := core.Scores{}
+	now := time.Now()
+	for _, n := range nodes {
+		if !n.CanAccept(w) { continue }
+		ciCost := metrics.ComputeCICost(&n, w, now)
+		util   := (w.CPU/(n.AvailableCPU+1e-9)) + (w.Memory/(n.AvailableMemory+1e-9))
+		waitS  := 0.0
+		if t := n.NextReleaseAfter(now); !t.IsZero() { waitS = t.Sub(now).Seconds() }
+		score := p.W.Carbon*ciCost + p.W.Wait*waitS + p.W.Queue*util // simple proxy
+		sc[n.ID] = score
+	}
+	return sc, nil
+}
+func (p *policy) Select(sc core.Scores) (string, bool) { return core.ArgMin(sc) }
+
+type Simulator struct {
+	base   core.BaseSim
+	pol    *policy
 }
 
-// NewCIScheduler builds a CI-aware baseline
-func NewCIScheduler(nodes []*core.SimulatedNode) *CIScheduler {
-	s := ecsched.NewScheduler(nodes)
-	return &CIScheduler{inner: s}
+func NewCIScheduler(nodes []*core.SimulatedNode, cfg Config) *Simulator {
+	s := &Simulator{pol: &policy{W: cfg.W}}
+	s.base.Init(nodes)
+	s.base.Select = func(w core.Workload, sims []*core.SimulatedNode) *core.SimulatedNode {
+		// Policy works directly over SimulatedNode via adapters
+		view := make([]core.SimulatedNode, 0, len(sims))
+		for _, n := range sims { view = append(view, *n) }
+		sc, _ := s.pol.Score(context.Background(), core.Workload{
+			ID: w.ID, CPU: w.CPU, Memory: w.Memory, Duration: w.Duration,
+		}, view)
+		if id, ok := s.pol.Select(sc); ok {
+			for _, n := range sims {
+				if n.Name == id && n.CanAccept(w) {
+					start := s.base.Clock
+					n.Reserve(w, start)
+					end := start.Add(w.Duration)
+					ci := metrics.ComputeCICost(n, core.Workload{
+						ID: w.ID, CPU: w.CPU, Memory: w.Memory, Duration: w.Duration,
+					}, start)
+					s.base.LogsBuf = append(s.base.LogsBuf, core.LogEntry{
+						JobID: w.ID, Node: n.Name,
+						Submit: w.SubmitTime, Start: start, End: end,
+						WaitMS: int64(start.Sub(w.SubmitTime)/time.Millisecond),
+						CICost: ci,
+					})
+					return n
+				}
+			}
+		}
+		return nil
+	}
+	return s
 }
 
-// AddWorkload forwards arrival
-func (s *CIScheduler) AddWorkload(w core.Workload) {
-	s.inner.AddWorkload(w)
-}
-
-// Run fetches CI metrics (TODO) then executes scheduling
-func (s *CIScheduler) Run() {
-	log.Print("[CIScheduler] fetching CI metrics... (TODO)")
-	// time.Sleep(10 * time.Millisecond) // No need to simulate this.
-	s.inner.Run()
-}
-
-func (s *CIScheduler) SetScheduleBatchSize(size int) {
-	s.inner.ScheduleBatchSize = size
-}
-
-// func (s *CIScheduler) SetCIBaseWeight(weight float64) {
-// 	s.inner.CIBaseWeight = weight
-// }
-
-// Logs exposes scheduling decisions
-func (s *CIScheduler) Logs() []core.LogEntry {
-	return s.inner.Logs
-}
+// adapters
+func (s *Simulator) SetScheduleBatchSize(n int)  { s.base.SetScheduleBatchSize(n) }
+func (s *Simulator) AddWorkload(j core.Workload) { s.base.AddWorkload(j) }
+func (s *Simulator) Run()                        { s.base.Run() }
+func (s *Simulator) Logs() []core.LogEntry       { return s.base.Logs() }
