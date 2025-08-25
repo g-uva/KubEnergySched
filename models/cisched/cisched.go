@@ -2,7 +2,6 @@ package cisched
 
 import (
 	"log"
-	// "time"
 	"kube-scheduler/models/ecsched"
 	"kube-scheduler/pkg/core"
 )
@@ -36,9 +35,9 @@ func (s *CIScheduler) SetScheduleBatchSize(size int) {
 	s.inner.ScheduleBatchSize = size
 }
 
-func (s *CIScheduler) SetCIBaseWeight(weight float64) {
-	s.inner.CIBaseWeight = weight
-}
+// func (s *CIScheduler) SetCIBaseWeight(weight float64) {
+// 	s.inner.CIBaseWeight = weight
+// }
 
 // Logs exposes scheduling decisions
 func (s *CIScheduler) Logs() []ecsched.LogEntry {

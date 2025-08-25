@@ -34,9 +34,9 @@ func (s *K8Simulator) SetScheduleBatchSize(size int) {
 	s.inner.ScheduleBatchSize = size
 }
 
-func (s *K8Simulator) SetCIBaseWeight(weight float64) {
-	s.inner.CIBaseWeight = weight
-}
+// func (s *K8Simulator) SetCIBaseWeight(weight float64) {
+// 	s.inner.CIBaseWeight = weight
+// }
 
 // Logs exposes decisions
 func (s *K8Simulator) Logs() []ecsched.LogEntry {

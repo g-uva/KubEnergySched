@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"kube-scheduler/models/cisched"
 	"kube-scheduler/models/ecsched"
+	"kube-scheduler/models/cisched"
 	"kube-scheduler/models/k8sched"
 	"kube-scheduler/pkg/generator"
 	"kube-scheduler/pkg/loader"
@@ -107,24 +107,24 @@ func main() {
 				name string
 				run  func([]core.Workload) ([]ecsched.LogEntry, float64)
 			}{
-				{"baseline", func(w []core.Workload) ([]ecsched.LogEntry, float64) {
-					nodes := loader.LoadNodesFromCSV(nodesCSV)
-					s := ecsched.NewScheduler(nodes)
-					s.ScheduleBatchSize = bs
-					s.CIBaseWeight = 0.0
-					for _, j := range w {
-						s.AddWorkload(j)
-					}
-					start := time.Now()
-					s.Run()
-					return s.Logs, float64(time.Since(start).Milliseconds())
-				}},
+				// {"baseline", func(w []core.Workload) ([]ecsched.LogEntry, float64) {
+				// 	nodes := loader.LoadNodesFromCSV(nodesCSV)
+				// 	s := ecsched.NewScheduler(nodes)
+				// 	s.ScheduleBatchSize = bs
+				// 	s.CIBaseWeight = 0.0
+				// 	for _, j := range w {
+				// 		s.AddWorkload(j)
+				// 	}
+				// 	start := time.Now()
+				// 	s.Run()
+				// 	return s.Logs, float64(time.Since(start).Milliseconds())
+				// }},
 
 				{"ci_aware", func(w []core.Workload) ([]ecsched.LogEntry, float64) {
 					nodes := loader.LoadNodesFromCSV(nodesCSV)
 					s := cisched.NewCIScheduler(nodes)
 					s.SetScheduleBatchSize(bs)
-					s.SetCIBaseWeight(ciW)
+					// s.SetCIBaseWeight(ciW)
 					for _, j := range w {
 						s.AddWorkload(j)
 					}
@@ -137,7 +137,7 @@ func main() {
 					nodes := loader.LoadNodesFromCSV(nodesCSV)
 					s := k8sched.NewK8Simulator(nodes)
 					s.SetScheduleBatchSize(bs)
-					s.SetCIBaseWeight(ciW)
+					// s.SetCIBaseWeight(ciW)
 					for _, j := range w {
 						s.AddWorkload(j)
 					}
