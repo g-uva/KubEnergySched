@@ -11,12 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"kube-scheduler/models/ecsched"
 	"kube-scheduler/models/cisched"
 	"kube-scheduler/models/k8sched"
+	"kube-scheduler/pkg/core"
 	"kube-scheduler/pkg/generator"
 	"kube-scheduler/pkg/loader"
-	"kube-scheduler/pkg/core"
 )
 
 // parseFloatSlice converts a comma-separated list of floats into a slice
@@ -52,7 +51,7 @@ func main() {
 	flag.StringVar(&nodesCSV, "nodes-csv", "", "path to nodes CSV (auto-generate if empty)")
 	flag.StringVar(&wlCSV, "wl-csv", "", "path to workloads CSV (auto-generate if empty)")
 	flag.StringVar(&ciWeightsFlag, "ci-weights", "0.05,0.1,0.2,0.4", "comma-separated CI-base weights")
-	flag.StringVar(&batchSizesFlag, "batch-sizes", "50,100,200", "comma-separated MCFP batch sizes")
+	flag.StringVar(&batchSizesFlag, "batch-sizes", "50,100,200", "comma-separated batch sizes")
 	flag.Parse()
 
 	// Auto-generate node and workload CSVs if not provided
@@ -105,9 +104,9 @@ func main() {
 			// Define scheduler specs
 			specs := []struct {
 				name string
-				run  func([]core.Workload) ([]ecsched.LogEntry, float64)
+				run  func([]core.Workload) ([]core.LogEntry, float64)
 			}{
-				// {"baseline", func(w []core.Workload) ([]ecsched.LogEntry, float64) {
+				// {"baseline", func(w []core.Workload) ([]core.LogEntry, float64) {
 				// 	nodes := loader.LoadNodesFromCSV(nodesCSV)
 				// 	s := ecsched.NewScheduler(nodes)
 				// 	s.ScheduleBatchSize = bs
@@ -120,7 +119,7 @@ func main() {
 				// 	return s.Logs, float64(time.Since(start).Milliseconds())
 				// }},
 
-				{"ci_aware", func(w []core.Workload) ([]ecsched.LogEntry, float64) {
+				{"ci_aware", func(w []core.Workload) ([]core.LogEntry, float64) {
 					nodes := loader.LoadNodesFromCSV(nodesCSV)
 					s := cisched.NewCIScheduler(nodes)
 					s.SetScheduleBatchSize(bs)
@@ -133,7 +132,7 @@ func main() {
 					return s.Logs(), float64(time.Since(start).Milliseconds())
 				}},
 
-				{"k8", func(w []core.Workload) ([]ecsched.LogEntry, float64) {
+				{"k8", func(w []core.Workload) ([]core.LogEntry, float64) {
 					nodes := loader.LoadNodesFromCSV(nodesCSV)
 					s := k8sched.NewK8Simulator(nodes)
 					s.SetScheduleBatchSize(bs)
@@ -183,7 +182,7 @@ func main() {
 				}
 				runWriter := csv.NewWriter(bf)
 				// header with CI cost
-				runWriter.Write([]string{"job_id","sched","node","submit","start","end","wait_ms","ci_cost"})
+				runWriter.Write([]string{"job_id", "sched", "node", "submit", "start", "end", "wait_ms", "ci_cost"})
 				for _, e := range logs {
 					runWriter.Write([]string{
 						e.JobID,

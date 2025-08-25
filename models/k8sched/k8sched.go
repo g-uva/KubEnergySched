@@ -1,9 +1,9 @@
 package k8sched
 
 import (
-	"log"
 	"kube-scheduler/models/ecsched"
 	"kube-scheduler/pkg/core"
+	"log"
 )
 
 // K8Simulator simulates Kubernetes scheduling
@@ -39,6 +39,6 @@ func (s *K8Simulator) SetScheduleBatchSize(size int) {
 // }
 
 // Logs exposes decisions
-func (s *K8Simulator) Logs() []ecsched.LogEntry {
+func (s *K8Simulator) Logs() []core.LogEntry {
 	return s.inner.Logs
 }

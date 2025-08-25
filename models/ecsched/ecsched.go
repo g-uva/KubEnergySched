@@ -17,17 +17,6 @@ const (
 	Swarm                            // most-loaded (simple backfill)
 )
 
-// LogEntry captures one placement decision.
-type LogEntry struct {
-	JobID  string
-	Node   string
-	Submit time.Time
-	Start  time.Time
-	End    time.Time
-	WaitMS int64
-	CICost float64
-}
-
 // EventType defines arrival or end.
 type EventType int
 
@@ -49,7 +38,7 @@ type DiscreteEventScheduler struct {
 	Clock             time.Time
 	Nodes             []*core.SimulatedNode
 	Events            []Event
-	Logs              []LogEntry
+	Logs              []core.LogEntry
 	SchedType         SchedulerType
 	ScheduleBatchSize int
 	Pending           []core.Workload
@@ -61,7 +50,7 @@ func NewScheduler(nodes []*core.SimulatedNode) *DiscreteEventScheduler {
 		Clock:             time.Now(),
 		Nodes:             nodes,
 		Events:            []Event{},
-		Logs:              []LogEntry{},
+		Logs:              []core.LogEntry{},
 		SchedType:         Kubernetes,
 		ScheduleBatchSize: 1,
 		Pending:           []core.Workload{},
@@ -110,7 +99,7 @@ func (s *DiscreteEventScheduler) processReleases(t time.Time) {
 			node.Reserve(w, t)
 			s.Events = append(s.Events, Event{Time: t.Add(w.Duration), Type: JobEnd, Node: node, Workload: w})
 			ciCost := metrics.ComputeCICost(node, w, t)
-			s.Logs = append(s.Logs, LogEntry{
+			s.Logs = append(s.Logs, core.LogEntry{
 				JobID:  w.ID,
 				Node:   node.Name,
 				Submit: w.SubmitTime,
@@ -151,7 +140,7 @@ func (s *DiscreteEventScheduler) scheduleBatch() {
 			node.Reserve(w, t)
 			s.Events = append(s.Events, Event{Time: t.Add(w.Duration), Type: JobEnd, Node: node, Workload: w})
 			ciCost := metrics.ComputeCICost(node, w, t)
-			s.Logs = append(s.Logs, LogEntry{
+			s.Logs = append(s.Logs, core.LogEntry{
 				JobID:  w.ID,
 				Node:   node.Name,
 				Submit: w.SubmitTime,

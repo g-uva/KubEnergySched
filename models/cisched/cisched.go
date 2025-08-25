@@ -1,9 +1,9 @@
 package cisched
 
 import (
-	"log"
 	"kube-scheduler/models/ecsched"
 	"kube-scheduler/pkg/core"
+	"log"
 )
 
 // CIScheduler wraps DiscreteEventScheduler for CI-awareness
@@ -13,7 +13,7 @@ type CIScheduler struct {
 	inner *ecsched.DiscreteEventScheduler
 }
 
-// NewCIScheduler builds a CI-aware baseline (using MCFP)
+// NewCIScheduler builds a CI-aware baseline
 func NewCIScheduler(nodes []*core.SimulatedNode) *CIScheduler {
 	s := ecsched.NewScheduler(nodes)
 	return &CIScheduler{inner: s}
@@ -40,6 +40,6 @@ func (s *CIScheduler) SetScheduleBatchSize(size int) {
 // }
 
 // Logs exposes scheduling decisions
-func (s *CIScheduler) Logs() []ecsched.LogEntry {
+func (s *CIScheduler) Logs() []core.LogEntry {
 	return s.inner.Logs
-}	
+}
