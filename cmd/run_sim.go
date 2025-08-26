@@ -17,6 +17,7 @@ import (
 	"kube-scheduler/pkg/core"
 	"kube-scheduler/pkg/generator"
 	"kube-scheduler/pkg/loader"
+	"kube-scheduler/pkg/metrics"
 )
 
 // parseFloatSlice converts a comma-separated list of floats into a slice
@@ -116,9 +117,13 @@ func main() {
 
 						pol := &carbonscaler.Policy{Cfg: carbonscaler.Config{Lambda: 1.0}}
 
-						// Use the generic simulator (the one CI-Sched uses), not cisched.BaseSim
-						sim := &core.BaseSim{}        // or whatever your generic sim struct is named
-						sim.Init(nodes, pol)          // pol implements the same Policy interface
+						sim := &core.BaseSim{}
+						sim.Init(nodes, pol)
+						sim.SetScheduleBatchSize(bs)
+						
+						sim.CICalc = func(n *core.SimulatedNode, w core.Workload, at time.Time) float64 {
+							return metrics.ComputeCICost(n, w, at)
+						}
 						sim.SetScheduleBatchSize(bs)
 						for _, j := range workloads { sim.AddWorkload(j) }
 
@@ -167,7 +172,7 @@ func main() {
 				// 		}
 				// 		t := time.Now()
 				// 		s.Run()
-				// 		return s.Logs(), float64(time.Since(t).Milliseconds())
+				// 		return s.Logs(), float64(time.Since(t).Milliseconds())cmd/run_sim.go
 				// 	},
 				// },
 
@@ -184,6 +189,11 @@ func main() {
 					}
 					sim := &core.BaseSim{Nodes: nodes, Policy: pol}
 					sim.SetScheduleBatchSize(bs)
+
+					sim.CICalc = func(n *core.SimulatedNode, w core.Workload, at time.Time) float64 {
+						return metrics.ComputeCICost(n, w, at)
+					}
+
 					for _, j := range w { sim.AddWorkload(j) }
 					start := time.Now(); sim.Run()
 					return sim.Logs(), float64(time.Since(start).Milliseconds())
@@ -194,13 +204,20 @@ func main() {
 					nodes := loader.LoadNodesFromCSV(nodesCSV)
 					sites := loader.LoadSitesFromCSV("config/sites.csv")
 					loader.AttachSites(nodes, sites)
-
+					
 					pol := &k8sched.Policy{}
-
+					
 					sim := &core.BaseSim{}
 					sim.Init(nodes, pol)
+
+					sim.CICalc = func(n *core.SimulatedNode, w core.Workload, at time.Time) float64 {
+						return metrics.ComputeCICost(n, w, at)
+					}
 					sim.SetScheduleBatchSize(bs)
-					for _, j := range w { sim.AddWorkload(j) }
+
+					for _, j := range w {
+						sim.AddWorkload(j)
+					}
 					start := time.Now()
 					sim.Run()
 					logs := sim.Logs()

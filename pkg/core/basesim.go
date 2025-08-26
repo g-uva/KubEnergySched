@@ -26,6 +26,7 @@ type BaseSim struct {
 
 	Select SelectFunc // optional: if set, used first
 	Policy Policy     // generic policy (cisched, carbonscaler, etc.)
+	CICalc func(n *SimulatedNode, w Workload, at time.Time) float64
 }
 
 func (b *BaseSim) Init(nodes []*SimulatedNode, pol Policy) {
@@ -37,9 +38,13 @@ func (b *BaseSim) Init(nodes []*SimulatedNode, pol Policy) {
 	b.Policy = pol
 }
 
-func (b *BaseSim) SetScheduleBatchSize(n int) { if n > 0 { b.Batch = n } }
-func (b *BaseSim) AddWorkload(j Workload)     { b.Pending = append(b.Pending, j) }
-func (b *BaseSim) Logs() []LogEntry           { return b.LogsBuf }
+func (b *BaseSim) SetScheduleBatchSize(n int) {
+	if n > 0 {
+		b.Batch = n
+	}
+}
+func (b *BaseSim) AddWorkload(j Workload) { b.Pending = append(b.Pending, j) }
+func (b *BaseSim) Logs() []LogEntry       { return b.LogsBuf }
 
 // simple eventless loop: process in submit-time order, greedy at current clock
 func (b *BaseSim) Run() {
@@ -52,30 +57,52 @@ func (b *BaseSim) Run() {
 			b.Clock = b.Pending[i].SubmitTime
 		}
 		// release resources at current time
-		for _, n := range b.Nodes { n.Release(b.Clock) }
+		for _, n := range b.Nodes {
+			n.Release(b.Clock)
+		}
 		// enqueue arrivals at/before now
 		for i < len(b.Pending) && !b.Pending[i].SubmitTime.After(b.Clock) {
 			queue = append(queue, b.Pending[i])
 			i++
 		}
-		if len(queue) == 0 { continue }
+		if len(queue) == 0 {
+			continue
+		}
 
 		// schedule up to Batch
 		next := queue[:0]
 		scheduled := 0
 		for _, w := range queue {
-			if scheduled >= b.Batch { next = append(next, w); continue }
+			if scheduled >= b.Batch {
+				next = append(next, w)
+				continue
+			}
 			n := b.selectNode(w)
-			if n == nil { next = append(next, w); continue }
+			if n == nil {
+				next = append(next, w)
+				continue
+			}
 
 			start := b.Clock
+
 			n.Reserve(w, start)
 			end := start.Add(w.Duration)
+
+			var ci float64
+			if b.CICalc != nil {
+				ci = b.CICalc(n,w,start)
+			}
+
 			b.LogsBuf = append(b.LogsBuf, LogEntry{
-				JobID:  w.ID, Node: n.Name, Submit: w.SubmitTime, Start: start, End: end,
+				JobID:  w.ID,
+				Node:   n.Name,
+				Submit: w.SubmitTime,
+				Start:  start,
+				End:    end,
 				WaitMS: int64(start.Sub(w.SubmitTime) / time.Millisecond),
-				// CICost: compute post-hoc if desired
+				CICost: ci,
 			})
+y
 			scheduled++
 		}
 		queue = next
@@ -84,7 +111,9 @@ func (b *BaseSim) Run() {
 		earliest := time.Time{}
 		for _, n := range b.Nodes {
 			if t := n.NextReleaseAfter(b.Clock); !t.IsZero() {
-				if earliest.IsZero() || t.Before(earliest) { earliest = t }
+				if earliest.IsZero() || t.Before(earliest) {
+					earliest = t
+				}
 			}
 		}
 		if earliest.IsZero() {
@@ -98,14 +127,18 @@ func (b *BaseSim) Run() {
 func (b *BaseSim) selectNode(w Workload) *SimulatedNode {
 	// 1) explicit override
 	if b.Select != nil {
-		if n := b.Select(w, b.Nodes); n != nil { return n }
+		if n := b.Select(w, b.Nodes); n != nil {
+			return n
+		}
 	}
 
 	// 2) policy-driven selection via Score
 	if b.Policy != nil {
 		// Build []SimulatedNode view (by value) from []*SimulatedNode
 		view := make([]SimulatedNode, 0, len(b.Nodes))
-		for _, np := range b.Nodes { view = append(view, *np) }
+		for _, np := range b.Nodes {
+			view = append(view, *np)
+		}
 
 		// Workload → Job wrapper for Score; keep CanAccept using Workload
 		j := Job{
@@ -134,9 +167,13 @@ func (b *BaseSim) selectNode(w Workload) *SimulatedNode {
 	var best *SimulatedNode
 	bestScore := math.MaxFloat64
 	for _, n := range b.Nodes {
-		if !n.CanAccept(w) { continue }
+		if !n.CanAccept(w) {
+			continue
+		}
 		used := (n.TotalCPU-n.AvailableCPU)/n.TotalCPU + (n.TotalMemory-n.AvailableMemory)/n.TotalMemory
-		if used < bestScore { bestScore, best = used, n }
+		if used < bestScore {
+			bestScore, best = used, n
+		}
 	}
 	return best
 }

@@ -5,7 +5,7 @@ import (
     "strconv"
     "strings"
     "time"
-    "kube-scheduler/pkg/core"
+	"kube-scheduler/pkg/core"
 )
 
 func parsePeakPower(s string, def float64) float64 {
