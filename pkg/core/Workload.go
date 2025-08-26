@@ -20,4 +20,3 @@ type WorkloadTestbed struct {
 	CPURequirement int
 	EnergyPriority float64 // 0.0 to 1.0, higher = more energy aware
 }
-
