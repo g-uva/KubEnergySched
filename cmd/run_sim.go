@@ -111,6 +111,8 @@ func main() {
 					name: "carbonscaler",
 					run: func(jobs []core.Workload) ([]core.LogEntry, float64) {
 						nodes := loader.LoadNodesFromCSV(nodesCSV)
+						sites := loader.LoadSitesFromCSV("config/sites.csv")
+						loader.AttachSites(nodes, sites)
 						s := carbonscaler.NewCarbonScaler(
 							nodes, carbonscaler.Config{
 								Lambda: ciW,
@@ -170,6 +172,8 @@ func main() {
 
 				{"ci_aware", func(w []core.Workload) ([]core.LogEntry, float64) {
 					nodes := loader.LoadNodesFromCSV(nodesCSV)
+					sites := loader.LoadSitesFromCSV("config/sites.csv")
+					loader.AttachSites(nodes, sites)
 					s := cisched.NewCIScheduler(
 						nodes,
 						cisched.Config{W: cisched.Weights{Carbon: ciW, Wait: 1.0, Queue: 0.0, Price: 0.0, Repro: 0.0}},
@@ -186,6 +190,8 @@ func main() {
 
 				{"k8", func(w []core.Workload) ([]core.LogEntry, float64) {
 					nodes := loader.LoadNodesFromCSV(nodesCSV)
+					sites := loader.LoadSitesFromCSV("config/sites.csv")
+					loader.AttachSites(nodes, sites)
 					s := k8sched.NewK8sSimulator(nodes)
 					s.SetScheduleBatchSize(bs)
 					// s.SetCIBaseWeight(ciW)

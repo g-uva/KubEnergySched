@@ -16,7 +16,9 @@ type SimulatedNode struct {
 	Labels          map[string]string
 	Metadata        map[string]string
 
-	Reservations []Reservation
+	Reservations    []Reservation
+	SiteID		 string
+	Site			 *Site
 }
 
 func NewNode(name string, cpu, mem, ci float64) *SimulatedNode {

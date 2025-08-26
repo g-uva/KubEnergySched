@@ -4,6 +4,10 @@ KubeEnergyScheduler *aims* to be a platform-agnostic plugin that seamlessly inte
 - **Fully-managed**: the user (developer/researcher) does not have to worry about the underlying computation and resource allocation.
 - **Kubernetes-based**: Kubernetes is the *de facto* cluster framework used at the core of many cloud infrastructures.
 
+### TODO development
+- `scoreOnJobNode` and `SelectSiteAndNode` on `scheduler.go`: it's commented out, needs to be implemented.
+- (Optional): clean unused files + Docker testbed configs.
+
 ### Testbed Architecture (WIP)
 ![Testbed Architecture](assets/testbed_architecture.png)
 
