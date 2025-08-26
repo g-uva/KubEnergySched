@@ -1,11 +1,20 @@
 package core
 
 import (
+	"context"
 	"math"
 	"sort"
 	"time"
 )
 
+// Generic policy interface (must match your policies' Score signature).
+type Policy interface {
+	Name() string
+	Score(ctx context.Context, j Job, nodes []SimulatedNode) (Scores, error)
+	// Select is optional; if absent, BaseSim will ArgMin itself.
+}
+
+// Optional override for fully custom selection.
 type SelectFunc func(w Workload, nodes []*SimulatedNode) *SimulatedNode
 
 type BaseSim struct {
@@ -14,15 +23,18 @@ type BaseSim struct {
 	Batch   int
 	Pending []Workload
 	LogsBuf []LogEntry
-	Select  SelectFunc
+
+	Select SelectFunc // optional: if set, used first
+	Policy Policy     // generic policy (cisched, carbonscaler, etc.)
 }
 
-func (b *BaseSim) Init(nodes []*SimulatedNode) {
+func (b *BaseSim) Init(nodes []*SimulatedNode, pol Policy) {
 	b.Clock = time.Now()
 	b.Nodes = nodes
 	b.Batch = 1
 	b.Pending = nil
 	b.LogsBuf = nil
+	b.Policy = pol
 }
 
 func (b *BaseSim) SetScheduleBatchSize(n int) { if n > 0 { b.Batch = n } }
@@ -47,6 +59,7 @@ func (b *BaseSim) Run() {
 			i++
 		}
 		if len(queue) == 0 { continue }
+
 		// schedule up to Batch
 		next := queue[:0]
 		scheduled := 0
@@ -54,37 +67,70 @@ func (b *BaseSim) Run() {
 			if scheduled >= b.Batch { next = append(next, w); continue }
 			n := b.selectNode(w)
 			if n == nil { next = append(next, w); continue }
+
 			start := b.Clock
 			n.Reserve(w, start)
 			end := start.Add(w.Duration)
 			b.LogsBuf = append(b.LogsBuf, LogEntry{
 				JobID:  w.ID, Node: n.Name, Submit: w.SubmitTime, Start: start, End: end,
 				WaitMS: int64(start.Sub(w.SubmitTime) / time.Millisecond),
-				// CICost: fill by caller if needed post-hoc, or compute inside SelectFunc if you prefer.
+				// CICost: compute post-hoc if desired
 			})
 			scheduled++
 		}
 		queue = next
-		// advance time to the earliest reservation end (approx: pick smallest future end from nodes)
+
+		// advance time to earliest reservation end
 		earliest := time.Time{}
 		for _, n := range b.Nodes {
-			if t := n.NextReleaseAfter(b.Clock); !t.IsZero() { // implement as needed; else approximate
+			if t := n.NextReleaseAfter(b.Clock); !t.IsZero() {
 				if earliest.IsZero() || t.Before(earliest) { earliest = t }
 			}
 		}
 		if earliest.IsZero() {
-			// fallback small tick to avoid stalling if NextReleaseAfter not implemented
 			earliest = b.Clock.Add(1 * time.Second)
 		}
 		b.Clock = earliest
 	}
 }
 
-// default least-loaded fallback if no Select provided
+// selection order: custom SelectFunc → policy.Score → least-loaded fallback
 func (b *BaseSim) selectNode(w Workload) *SimulatedNode {
+	// 1) explicit override
 	if b.Select != nil {
 		if n := b.Select(w, b.Nodes); n != nil { return n }
 	}
+
+	// 2) policy-driven selection via Score
+	if b.Policy != nil {
+		// Build []SimulatedNode view (by value) from []*SimulatedNode
+		view := make([]SimulatedNode, 0, len(b.Nodes))
+		for _, np := range b.Nodes { view = append(view, *np) }
+
+		// Workload → Job wrapper for Score; keep CanAccept using Workload
+		j := Job{
+			ID:                w.ID,
+			CPUReq:            w.CPU,
+			MemReq:            w.Memory,
+			EstimatedDuration: w.Duration.Seconds(),
+			SubmitAt:          w.SubmitTime,
+			Labels:            w.Labels,
+			Tags:              nil, // fill if you route tags
+			DeadlineMs:        0,   // fill if relevant
+		}
+
+		if scores, err := b.Policy.Score(context.Background(), j, view); err == nil && len(scores) > 0 {
+			if id, ok := ArgMin(scores); ok {
+				for _, n := range b.Nodes {
+					if n.Name == id && n.CanAccept(w) {
+						return n
+					}
+				}
+			}
+		}
+	}
+
+	// 3) least-loaded fallback
 	var best *SimulatedNode
 	bestScore := math.MaxFloat64
 	for _, n := range b.Nodes {

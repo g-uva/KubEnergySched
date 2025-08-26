@@ -12,7 +12,7 @@ type SimulatedNode struct {
 	TotalMemory     float64
 	AvailableCPU    float64
 	AvailableMemory float64
-	CarbonIntensity float64        // gCO₂/kWh (optional, if you have traces keep it)
+	CarbonIntensity float64        // gCO₂/kWh (optional, if we have traces keep it)
 	Labels          map[string]string
 	Metadata        map[string]string
 
@@ -64,7 +64,7 @@ func (n *SimulatedNode) Release(t time.Time) {
 }
 
 func (n *SimulatedNode) CurrentCINorm(at time.Time) float64 {
-	// If you have time-varying CI, normalize here; otherwise use label hints:
+	// If we have time-varying CI, normalize here; otherwise use label hints:
 	switch n.Labels["ci_profile"] {
 	case "low":
 		return 0.2

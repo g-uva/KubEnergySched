@@ -1,117 +1,210 @@
+// Package: models/cisched/cisched.go
 package cisched
 
 import (
 	"context"
+	"fmt"
+	"math"
+	"sort"
+	"time"
 
 	"kube-scheduler/pkg/core"
 	"kube-scheduler/pkg/metrics"
 )
 
-type Weights struct {
-	Carbon float64
-	Wait   float64
-	Queue  float64
-	Price  float64
-	Repro  float64
-}
+// Score implements the CI-Aware scorer with robust scaling and a soft util/queue guard.
+// NOTE: We adapt Job -> Workload so CanAccept() (which expects Workload) works.
+func (p *Policy) Score(_ context.Context, j core.Job, nodes []core.SimulatedNode) (core.Scores, error) {
+	now := time.Now()
 
-type Config struct{ W Weights }
-
-type Policy struct{ W Weights }
-
-func (p *Policy) Name() string { return "ci_aware" }
-
-// Score over lightweight Node views (no sim-only methods here)
-func (p *Policy) Score(_ context.Context, j core.Job, nodes []core.Node) (core.Scores, error) {
-	sc := core.Scores{}
-	_ = j // reserved for future features (e.g., site prefs)
-	for _, n := range nodes {
-		// carbon proxy from adapter-provided ci_norm (0..1)
-		ci := n.Metrics["ci_norm"]
-
-		// simple utilisation proxy (0..2)
-		util := 0.0
-		if n.CPUCap > 0 {
-			util += n.Metrics["cpu_used"] / n.CPUCap
-		}
-		if n.MemCap > 0 {
-			util += n.Metrics["mem_used"] / n.MemCap
-		}
-
-		// wait proxy unavailable in Node view → set to 0 (adapter enforces feasibility)
-		waitS := 0.0
-
-		score := p.W.Carbon*ci + p.W.Wait*waitS + p.W.Queue*util
-		sc[n.ID] = score
+	// Job -> Workload adaptation (keeps your Job struct unchanged).
+	w := core.Workload{
+		ID:         j.ID,
+		CPU:        j.CPUReq,
+		Memory:     j.MemReq,
+		Duration:   time.Duration(j.EstimatedDuration * float64(time.Second)),
+		SubmitTime: j.SubmitAt,
+		Labels:     j.Labels,
 	}
+
+	type feat struct {
+		key         string
+		ciCostG     float64
+		waitSeconds float64
+		utilOrQueue float64
+		skip        bool
+	}
+	features := make([]feat, 0, len(nodes))
+
+	for _, n := range nodes {
+		if !n.CanAccept(w) {
+			features = append(features, feat{skip: true})
+			continue
+		}
+
+		// 1) Carbon impact (your ComputeCICost should already apply PUE*K and region CI).
+		ci := metrics.ComputeCICost(&n, w, now) // grams CO₂
+
+		// 2) Wait proxy (0 when free).
+		waitS := 0.0
+		if d := nextReleaseAfter(n, now); d > 0 {
+			waitS = d.Seconds()
+		}
+
+		// 3) Soft guard: utilisation preferred; else queue length (both will be scaled).
+		guard := utilisationOrQueue(n)
+
+		features = append(features, feat{
+			key:         nodeKey(n),
+			ciCostG:     ci,
+			waitSeconds: waitS,
+			utilOrQueue: guard,
+		})
+	}
+
+	// Collect for scaling (ignore skipped).
+	var cis, waits, utils []float64
+	for _, f := range features {
+		if f.skip {
+			continue
+		}
+		cis = append(cis, f.ciCostG)
+		waits = append(waits, f.waitSeconds)
+		utils = append(utils, f.utilOrQueue)
+	}
+
+	// Robust (5–95) or min–max fallback.
+	scale := p.Scale
+	if !scale.Enable {
+		scale = RobustScalingCfg{Enable: false, QLow: 0.0, QHigh: 1.0, Eps: 1e-9}
+	} else {
+		if scale.QLow <= 0 || scale.QLow >= 0.5 {
+			scale.QLow = 0.05
+		}
+		if scale.QHigh <= 0.5 || scale.QHigh >= 1.0 {
+			scale.QHigh = 0.95
+		}
+		if scale.Eps == 0 {
+			scale.Eps = 1e-9
+		}
+	}
+
+	ciScaler := buildScaler(cis, scale)
+	waitScaler := buildScaler(waits, scale)
+	utilScaler := buildScaler(utils, scale)
+
+	// Compose (lower is better).
+	sc := core.Scores{} // map[string]float64
+
+	for _, f := range features {
+		if f.skip {
+			continue
+		}
+		ciZ := ciScaler(f.ciCostG)
+		waitZ := waitScaler(f.waitSeconds)
+		utilZ := utilScaler(f.utilOrQueue)
+
+		score := p.W.Carbon*ciZ + p.W.Wait*waitZ + p.W.Util*utilZ
+		sc[f.key] = score
+	}
+
 	return sc, nil
 }
 
-func (p *Policy) Select(sc core.Scores) (string, bool) { return core.ArgMin(sc) }
+// ----------------- helpers -----------------
 
-type Simulator struct {
-	base   core.BaseSim
-	policy *Policy
-}
-
-func NewCIScheduler(nodes []*core.SimulatedNode, cfg Config) *Simulator {
-	s := &Simulator{policy: &Policy{W: cfg.W}}
-	s.base.Init(nodes)
-
-	s.base.Select = func(w core.Workload, sims []*core.SimulatedNode) *core.SimulatedNode {
-		now := s.base.Clock
-
-		// 1) Build Node views for policy
-		view := make([]core.Node, 0, len(sims))
-		for _, n := range sims {
-			view = append(view, core.Node{
-				ID:     n.Name,
-				CPUCap: n.TotalCPU,
-				MemCap: n.TotalMemory,
-				Labels: n.Labels,
-				Metrics: map[string]float64{
-					"cpu_used": (n.TotalCPU - n.AvailableCPU),
-					"mem_used": (n.TotalMemory - n.AvailableMemory),
-					"ci_norm":  n.CurrentCINorm(now),
-				},
-			})
-		}
-
-		// 2) Workload -> Job view for scoring
-		j := core.JobView(w)
-
-		// 3) Score & select
-		scores, _ := s.policy.Score(context.Background(), j, view)
-		if id, ok := s.policy.Select(scores); ok {
-			for _, n := range sims {
-				if n.Name == id && n.CanAccept(w) {
-					start := now
-					n.Reserve(w, start)
-					end := start.Add(w.Duration)
-
-					// true CI impact (with PUE/k) for logging
-					ci := metrics.ComputeCICost(n, w, start)
-
-					s.base.LogsBuf = append(s.base.LogsBuf, core.LogEntry{
-						JobID:  w.ID,
-						Node:   n.Name,
-						Submit: w.SubmitTime,
-						Start:  start,
-						End:    end,
-						WaitMS: int64(start.Sub(w.SubmitTime).Milliseconds()),
-						CICost: ci,
-					})
-					return n
-				}
-			}
-		}
-		return nil
+func nodeKey(n core.SimulatedNode) string {
+	if v, ok := any(n).(interface{ ID() string }); ok {
+		return v.ID()
 	}
-	return s
+	if v, ok := any(n).(interface{ Name() string }); ok {
+		return v.Name()
+	}
+	return fmt.Sprintf("%p", &n)
 }
 
-// adapters
-func (s *Simulator) SetScheduleBatchSize(n int)  { s.base.SetScheduleBatchSize(n) }
-func (s *Simulator) AddWorkload(j core.Workload) { s.base.AddWorkload(j) }
-func (s *Simulator) Run()                        { s.base.Run() }
-func (s *Simulator) Logs() []core.LogEntry       { return s.base.Logs() }
+func nextReleaseAfter(n core.SimulatedNode, t time.Time) time.Duration {
+	if v, ok := any(n).(interface{ NextReleaseAfter(time.Time) time.Duration }); ok {
+		return v.NextReleaseAfter(t)
+	}
+	return 0
+}
+
+func utilisationOrQueue(n core.SimulatedNode) float64 {
+	if v, ok := any(n).(interface{ Utilisation() float64 }); ok {
+		u := v.Utilisation()
+		if !math.IsNaN(u) && !math.IsInf(u, 0) {
+			return clamp(u, 0, 1)
+		}
+	}
+	if v, ok := any(n).(interface{ QueueLen() int }); ok {
+		q := float64(v.QueueLen())
+		if q < 0 {
+			q = 0
+		}
+		return q
+	}
+	return 0
+}
+
+func clamp(x, lo, hi float64) float64 {
+	if x < lo {
+		return lo
+	}
+	if x > hi {
+		return hi
+	}
+	return x
+}
+
+// buildScaler uses cisched.RobustScalingCfg (not core.*)
+func buildScaler(vals []float64, cfg RobustScalingCfg) func(float64) float64 {
+	clean := make([]float64, 0, len(vals))
+	for _, v := range vals {
+		if !math.IsNaN(v) && !math.IsInf(v, 0) {
+			clean = append(clean, v)
+		}
+	}
+	if len(clean) == 0 {
+		return func(x float64) float64 { return 0 }
+	}
+	sort.Float64s(clean)
+
+	if cfg.Enable {
+		qlo := percentile(clean, cfg.QLow)
+		qhi := percentile(clean, cfg.QHigh)
+		den := qhi - qlo
+		if den < cfg.Eps {
+			return func(x float64) float64 { return 0 }
+		}
+		return func(x float64) float64 { return clamp((x-qlo)/den, 0, 1) }
+	}
+
+	minV := clean[0]
+	maxV := clean[len(clean)-1]
+	den := maxV - minV
+	if den < cfg.Eps {
+		return func(x float64) float64 { return 0 }
+	}
+	return func(x float64) float64 { return clamp((x-minV)/den, 0, 1) }
+}
+
+func percentile(sorted []float64, q float64) float64 {
+	if len(sorted) == 0 {
+		return math.NaN()
+	}
+	if q <= 0 {
+		return sorted[0]
+	}
+	if q >= 1 {
+		return sorted[len(sorted)-1]
+	}
+	pos := q * float64(len(sorted)-1)
+	lo := int(math.Floor(pos))
+	hi := int(math.Ceil(pos))
+	if lo == hi {
+		return sorted[lo]
+	}
+	frac := pos - float64(lo)
+	return sorted[lo] + frac*(sorted[hi]-sorted[lo])
+}

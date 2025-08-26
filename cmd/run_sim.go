@@ -109,24 +109,25 @@ func main() {
 			}{
 				{
 					name: "carbonscaler",
-					run: func(jobs []core.Workload) ([]core.LogEntry, float64) {
+					run: func(workloads []core.Workload) ([]core.LogEntry, float64) {
 						nodes := loader.LoadNodesFromCSV(nodesCSV)
 						sites := loader.LoadSitesFromCSV("config/sites.csv")
 						loader.AttachSites(nodes, sites)
-						s := carbonscaler.NewCarbonScaler(
-							nodes, carbonscaler.Config{
-								Lambda: ciW,
-							},
-						)
-						s.SetScheduleBatchSize(bs)
-						for _, j := range jobs {
-							s.AddWorkload(j)
-						}
-						t := time.Now()
-						s.Run()
-						return s.Logs(), float64(time.Since(t).Milliseconds())
+
+						pol := &carbonscaler.Policy{Cfg: carbonscaler.Config{Lambda: 1.0}}
+
+						// Use the generic simulator (the one CI-Sched uses), not cisched.BaseSim
+						sim := &core.BaseSim{}        // or whatever your generic sim struct is named
+						sim.Init(nodes, pol)          // pol implements the same Policy interface
+						sim.SetScheduleBatchSize(bs)
+						for _, j := range workloads { sim.AddWorkload(j) }
+
+						start := time.Now()
+						sim.Run()
+						return sim.Logs(), float64(time.Since(start).Milliseconds())
 					},
 				},
+
 				// {
 				// 	name: "greenalg",
 				// 	run: func(jobs []core.Workload) ([]core.LogEntry, float64) {
@@ -172,35 +173,39 @@ func main() {
 
 				{"ci_aware", func(w []core.Workload) ([]core.LogEntry, float64) {
 					nodes := loader.LoadNodesFromCSV(nodesCSV)
+
+					// If our loader returns (sites, err), handle the error; otherwise keep as-is.
 					sites := loader.LoadSitesFromCSV("config/sites.csv")
 					loader.AttachSites(nodes, sites)
-					s := cisched.NewCIScheduler(
-						nodes,
-						cisched.Config{W: cisched.Weights{Carbon: ciW, Wait: 0.001, Queue: 0.25}},
-					)
-					s.SetScheduleBatchSize(bs)
-					
-					for _, j := range w {
-						s.AddWorkload(j)
+
+					pol := &cisched.Policy{
+						W:     cisched.Weights{Carbon: 1.1, Wait: 0.2, Util: 0.05},                 // (iii) wider grid knob
+						Scale: cisched.RobustScalingCfg{Enable: true, QLow: 0.05, QHigh: 0.95, Eps: 1e-9}, // (i) robust scaling
 					}
-					start := time.Now()
-					s.Run()
-					return s.Logs(), float64(time.Since(start).Milliseconds())
+					sim := &core.BaseSim{Nodes: nodes, Policy: pol}
+					sim.SetScheduleBatchSize(bs)
+					for _, j := range w { sim.AddWorkload(j) }
+					start := time.Now(); sim.Run()
+					return sim.Logs(), float64(time.Since(start).Milliseconds())
+
 				}},
 
 				{"k8", func(w []core.Workload) ([]core.LogEntry, float64) {
 					nodes := loader.LoadNodesFromCSV(nodesCSV)
 					sites := loader.LoadSitesFromCSV("config/sites.csv")
 					loader.AttachSites(nodes, sites)
-					s := k8sched.NewK8sSimulator(nodes)
-					s.SetScheduleBatchSize(bs)
-					// s.SetCIBaseWeight(ciW)
-					for _, j := range w {
-						s.AddWorkload(j)
-					}
+
+					pol := &k8sched.Policy{}
+
+					sim := &core.BaseSim{}
+					sim.Init(nodes, pol)
+					sim.SetScheduleBatchSize(bs)
+					for _, j := range w { sim.AddWorkload(j) }
 					start := time.Now()
-					s.Run()
-					return s.Logs(), float64(time.Since(start).Milliseconds())
+					sim.Run()
+					logs := sim.Logs()
+					elapsedMs := float64(time.Since(start).Milliseconds())
+					return logs, elapsedMs
 				}},
 			}
 
