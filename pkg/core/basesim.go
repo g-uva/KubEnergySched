@@ -85,13 +85,14 @@ func (b *BaseSim) Run() {
 
 			start := b.Clock
 
-			n.Reserve(w, start)
-			end := start.Add(w.Duration)
-
 			var ci float64
 			if b.CICalc != nil {
 				ci = b.CICalc(n,w,start)
 			}
+
+
+			n.Reserve(w, start)
+			end := start.Add(w.Duration)
 
 			b.LogsBuf = append(b.LogsBuf, LogEntry{
 				JobID:  w.ID,
@@ -102,7 +103,7 @@ func (b *BaseSim) Run() {
 				WaitMS: int64(start.Sub(w.SubmitTime) / time.Millisecond),
 				CICost: ci,
 			})
-y
+
 			scheduled++
 		}
 		queue = next

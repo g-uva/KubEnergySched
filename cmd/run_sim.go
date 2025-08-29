@@ -48,12 +48,31 @@ func parseIntSlice(s string) []int {
 	return out
 }
 
+// helper: parse seconds → []time.Duration
+func parseDurationSliceSeconds(s string) []time.Duration {
+    if strings.TrimSpace(s) == "" { return nil }
+    floats := parseFloatSlice(s)
+    out := make([]time.Duration, len(floats))
+    for i, v := range floats {
+        out[i] = time.Duration(v * float64(time.Second))
+    }
+    return out
+}
+
 func main() {
 	var nodesCSV, wlCSV, ciWeightsFlag, batchSizesFlag string
+	var durScale float64
+	var durationsFlag string
+
 	flag.StringVar(&nodesCSV, "nodes-csv", "", "path to nodes CSV (auto-generate if empty)")
 	flag.StringVar(&wlCSV, "wl-csv", "", "path to workloads CSV (auto-generate if empty)")
-	flag.StringVar(&ciWeightsFlag, "ci-weights", "0.05,0.1,0.2,0.4", "comma-separated CI-base weights")
+	flag.StringVar(&ciWeightsFlag, "ci-weights", "0.1,0.5,1.0,1.5", "comma-separated CI-base weights")
 	flag.StringVar(&batchSizesFlag, "batch-sizes", "50,100,200", "comma-separated batch sizes")
+
+	// NEW knobs
+	flag.Float64Var(&durScale, "dur-scale", 1.0, "multiply all job durations by this factor")
+	flag.StringVar(&durationsFlag, "durations", "", "comma-separated job durations (seconds) to override, assigned round-robin")
+
 	flag.Parse()
 
 	// Auto-generate node and workload CSVs if not provided
@@ -75,6 +94,19 @@ func main() {
 
 	// Load workloads once
 	wls := loader.LoadWorkloadsFromCSV(wlCSV)
+
+	// Apply duration overrides (NEW)
+	if durScale != 1.0 {
+		for i := range wls {
+			wls[i].Duration = time.Duration(float64(wls[i].Duration) * durScale)
+		}
+	}
+	if dset := parseDurationSliceSeconds(durationsFlag); len(dset) > 0 {
+		// deterministic assignment: round-robin
+		for i := range wls {
+			wls[i].Duration = dset[i%len(dset)]
+		}
+	}
 
 	// Prepare top-level results directory and subfolder for this run
 	ts := time.Now().Unix()
@@ -115,21 +147,75 @@ func main() {
 						sites := loader.LoadSitesFromCSV("config/sites.csv")
 						loader.AttachSites(nodes, sites)
 
-						pol := &carbonscaler.Policy{Cfg: carbonscaler.Config{Lambda: 1.0}}
+						pol := &carbonscaler.Policy{Cfg: carbonscaler.Config{Lambda: ciW}}
 
 						sim := &core.BaseSim{}
-						sim.Init(nodes, pol)
+						sim.Init(nodes, pol) // ensure consistent init
 						sim.SetScheduleBatchSize(bs)
-						
 						sim.CICalc = func(n *core.SimulatedNode, w core.Workload, at time.Time) float64 {
 							return metrics.ComputeCICost(n, w, at)
 						}
-						sim.SetScheduleBatchSize(bs)
-						for _, j := range workloads { sim.AddWorkload(j) }
+						for _, j := range workloads {
+							sim.AddWorkload(j)
+						}
 
 						start := time.Now()
 						sim.Run()
 						return sim.Logs(), float64(time.Since(start).Milliseconds())
+					},
+				},
+				{
+					name: "ci_aware",
+					run: func(w []core.Workload) ([]core.LogEntry, float64) {
+						nodes := loader.LoadNodesFromCSV(nodesCSV)
+						sites := loader.LoadSitesFromCSV("config/sites.csv")
+						loader.AttachSites(nodes, sites)
+
+						// Use the swept weight (FIX)
+						pol := &cisched.Policy{
+							W:     cisched.Weights{Carbon: ciW, Wait: 0.2, Util: 0.05},
+							Scale: cisched.RobustScalingCfg{Enable: true, QLow: 0.05, QHigh: 0.95, Eps: 1e-9},
+						}
+
+						sim := &core.BaseSim{}
+						sim.Init(nodes, pol) // ensure consistent init
+						sim.SetScheduleBatchSize(bs)
+						sim.CICalc = func(n *core.SimulatedNode, w core.Workload, at time.Time) float64 {
+							return metrics.ComputeCICost(n, w, at)
+						}
+						for _, j := range w {
+							sim.AddWorkload(j)
+						}
+
+						start := time.Now()
+						sim.Run()
+						return sim.Logs(), float64(time.Since(start).Milliseconds())
+					},
+				},
+				{
+					name: "k8",
+					run: func(w []core.Workload) ([]core.LogEntry, float64) {
+						nodes := loader.LoadNodesFromCSV(nodesCSV)
+						sites := loader.LoadSitesFromCSV("config/sites.csv")
+						loader.AttachSites(nodes, sites)
+
+						pol := &k8sched.Policy{}
+
+						sim := &core.BaseSim{}
+						sim.Init(nodes, pol)
+						sim.SetScheduleBatchSize(bs)
+						sim.CICalc = func(n *core.SimulatedNode, w core.Workload, at time.Time) float64 {
+							return metrics.ComputeCICost(n, w, at)
+						}
+						for _, j := range w {
+							sim.AddWorkload(j)
+						}
+
+						start := time.Now()
+						sim.Run()
+						logs := sim.Logs()
+						elapsedMs := float64(time.Since(start).Milliseconds())
+						return logs, elapsedMs
 					},
 				},
 
@@ -176,54 +262,6 @@ func main() {
 				// 	},
 				// },
 
-				{"ci_aware", func(w []core.Workload) ([]core.LogEntry, float64) {
-					nodes := loader.LoadNodesFromCSV(nodesCSV)
-
-					// If our loader returns (sites, err), handle the error; otherwise keep as-is.
-					sites := loader.LoadSitesFromCSV("config/sites.csv")
-					loader.AttachSites(nodes, sites)
-
-					pol := &cisched.Policy{
-						W:     cisched.Weights{Carbon: 1.1, Wait: 0.2, Util: 0.05},                 // (iii) wider grid knob
-						Scale: cisched.RobustScalingCfg{Enable: true, QLow: 0.05, QHigh: 0.95, Eps: 1e-9}, // (i) robust scaling
-					}
-					sim := &core.BaseSim{Nodes: nodes, Policy: pol}
-					sim.SetScheduleBatchSize(bs)
-
-					sim.CICalc = func(n *core.SimulatedNode, w core.Workload, at time.Time) float64 {
-						return metrics.ComputeCICost(n, w, at)
-					}
-
-					for _, j := range w { sim.AddWorkload(j) }
-					start := time.Now(); sim.Run()
-					return sim.Logs(), float64(time.Since(start).Milliseconds())
-
-				}},
-
-				{"k8", func(w []core.Workload) ([]core.LogEntry, float64) {
-					nodes := loader.LoadNodesFromCSV(nodesCSV)
-					sites := loader.LoadSitesFromCSV("config/sites.csv")
-					loader.AttachSites(nodes, sites)
-					
-					pol := &k8sched.Policy{}
-					
-					sim := &core.BaseSim{}
-					sim.Init(nodes, pol)
-
-					sim.CICalc = func(n *core.SimulatedNode, w core.Workload, at time.Time) float64 {
-						return metrics.ComputeCICost(n, w, at)
-					}
-					sim.SetScheduleBatchSize(bs)
-
-					for _, j := range w {
-						sim.AddWorkload(j)
-					}
-					start := time.Now()
-					sim.Run()
-					logs := sim.Logs()
-					elapsedMs := float64(time.Since(start).Milliseconds())
-					return logs, elapsedMs
-				}},
 			}
 
 			// Run each scheduler and record metrics

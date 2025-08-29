@@ -27,7 +27,10 @@ func ComputeCICost(n *core.SimulatedNode, w core.Workload, t time.Time) float64 
 	if n.TotalCPU > 0 {
 		cpuFrac = w.CPU / n.TotalCPU
 	}
-	energyKWh := (pPeak * cpuFrac * math.Max(w.Duration.Seconds(), 0.0)) / 3600.0
+
+	idleFrac := 0.15
+	powerW := pPeak*idleFrac + cpuFrac*math.Max(pPeak - pPeak*idleFrac, 0)
+	energyKWh := powerW * math.Max(w.Duration.Seconds(), 0) / 3600.0
 
 	pue := 1.0
 	k := 1.0
